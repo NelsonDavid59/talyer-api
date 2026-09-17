@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("TalyerApp.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+074aec7abc2a144c3dc7b1f067ddce88d9161640")]
 [assembly: System.Reflection.AssemblyProductAttribute("TalyerApp.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TalyerApp.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
