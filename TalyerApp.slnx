@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/TalyerApp.Api/TalyerApp.Api.csproj" />
+    <Project Path="src/TalyerApp.Application/TalyerApp.Application.csproj" />
+    <Project Path="src/TalyerApp.Domain/TalyerApp.Domain.csproj" />
+    <Project Path="src/TalyerApp.Infrastructure/TalyerApp.Infrastructure.csproj" />
+  </Folder>
+</Solution>

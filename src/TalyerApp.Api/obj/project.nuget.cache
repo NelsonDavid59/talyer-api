@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "Wqz/JmjiXNY=",
+  "success": true,
+  "projectFilePath": "/home/fleitas59/Escritorio/Talyer-App/src/TalyerApp.Api/TalyerApp.Api.csproj",
+  "expectedPackageFiles": [
+    "/home/fleitas59/.nuget/packages/microsoft.aspnetcore.openapi/10.0.11/microsoft.aspnetcore.openapi.10.0.11.nupkg.sha512",
+    "/home/fleitas59/.nuget/packages/microsoft.openapi/2.7.5/microsoft.openapi.2.7.5.nupkg.sha512",
+    "/home/fleitas59/.nuget/packages/scalar.aspnetcore/2.17.4/scalar.aspnetcore.2.17.4.nupkg.sha512"
+  ],
+  "logs": []
+}
