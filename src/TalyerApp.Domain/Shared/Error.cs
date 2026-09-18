@@ -1,3 +1,5 @@
+namespace TalyerApp.Domain.Shared;
+
 public sealed record Error(string Code, string Message)
 {
     // Represents the absence of an error.

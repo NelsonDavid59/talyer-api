@@ -1,3 +1,5 @@
+namespace TalyerApp.Domain.Shared;
+
 public static class DomainErrors
 {
     public static class UserProfile
@@ -10,8 +12,5 @@ public static class DomainErrors
 
         public static readonly Error InvalidUserProfileLastNameFormat = 
             Error.Validation("UserProfile.InvalidLastName", "User profile last name format is invalid.");
-
-        public static readonly Error InvalidUserProfileData = 
-            Error.Validation("UserProfile.InvalidData", "Invalid user profile data.");
     }
 }
