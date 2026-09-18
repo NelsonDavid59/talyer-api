@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("TalyerApp.Infrastructure")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+074aec7abc2a144c3dc7b1f067ddce88d9161640")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d8c61d513a2bf6acf382a25e18bef92a9ff5abef")]
 [assembly: System.Reflection.AssemblyProductAttribute("TalyerApp.Infrastructure")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TalyerApp.Infrastructure")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

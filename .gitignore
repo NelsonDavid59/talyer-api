@@ -1,0 +1,14 @@
+## Archivos de compilación y salida de .NET
+[Bb]in/
+[Oo]bj/
+
+## Configuración del IDE y entorno
+.vs/
+.vscode/
+*.user
+*.userosscache
+*.suo
+
+## Archivos de publish o paquetes
+*.nupkg
+publish/
