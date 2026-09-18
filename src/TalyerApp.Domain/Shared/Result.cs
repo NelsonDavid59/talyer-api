@@ -10,17 +10,17 @@ public class Result
 
     protected Result(bool isSuccess, Error error)
     {
-        if (isSuccess && error != null)
+        if (isSuccess && error != Error.None)
             throw new InvalidOperationException("A successful result cannot have an error.");
 
-        if (!isSuccess && error == null)
+        if (!isSuccess && error == Error.None)
             throw new InvalidOperationException("A failure result must have an error.");
 
         IsSuccess = isSuccess;
         Error = error;
     }
 
-    public static Result Success() => new Result(true, null);
+    public static Result Success() => new Result(true, Error.None);
 
     public static Result Failure(Error error) => new Result(false, error);
 }
@@ -42,7 +42,6 @@ public class Result<T> : Result
         _value = default;
     }
 
-    public static Result<T> Success(T value) => new Result<T>(value);
-    public static Result<T> Failure(Error error) => new Result<T>(error);
-
+    public static Result<T> Success(T value) => new(value);
+    public static Result<T> Failure(Error error) => new(error);
 }

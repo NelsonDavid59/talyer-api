@@ -1,6 +1,6 @@
 ## Archivos de compilación y salida de .NET
-[Bb]in/
-[Oo]bj/
+**/[Bb]in/
+**/[Oo]bj/
 
 ## Configuración del IDE y entorno
 .vs/

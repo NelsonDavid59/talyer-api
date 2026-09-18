@@ -1,3 +1,7 @@
+using TalyerApp.Domain.Shared;
+
+namespace TalyerApp.Domain.Entities;
+
 public class UserProfile
 {
     public Guid UserId { get; private set; }
@@ -15,14 +19,14 @@ public class UserProfile
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public static UserProfile Create(string firstName, string lastName)
+    public static Result<UserProfile> Create(string firstName, string lastName)
     {
         if (string.IsNullOrWhiteSpace(firstName))
-            throw new ArgumentException("First name cannot be empty.", nameof(firstName));
+            return Result<UserProfile>.Failure(DomainErrors.UserProfile.InvalidUserProfileFirstNameFormat);
 
         if (string.IsNullOrWhiteSpace(lastName))
-            throw new ArgumentException("Last name cannot be empty.", nameof(lastName));
+            return Result<UserProfile>.Failure(DomainErrors.UserProfile.InvalidUserProfileLastNameFormat);
 
-        return new UserProfile(firstName, lastName);
+        return Result<UserProfile>.Success(new UserProfile(firstName, lastName));
     }
 }
