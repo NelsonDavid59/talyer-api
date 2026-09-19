@@ -1,4 +1,4 @@
-namespace TalyerApp.Domain.Shared;
+namespace TalyerApp.Domain.Shared.Result;
 
 // Represents the result of an operation, which can either be a success or a failure.
 // For operations that do not return data.

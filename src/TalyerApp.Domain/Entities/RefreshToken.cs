@@ -1,26 +1,23 @@
-using TalyerApp.Domain.Shared;
+using TalyerApp.Domain.Shared.Result;
 
 namespace TalyerApp.Domain.Entities;
 
-public class RefreshToken
+public class RefreshToken : BaseEntity
 {
     public Guid Id { get; private set; }
     public Guid UserId { get; private set; }
     public string Token { get; private set; }
     public DateTime ExpiresAt { get; private set; }
     public bool IsExpired => DateTime.UtcNow >= ExpiresAt;
-    public DateTime CreatedAt { get; private set; }
     public DateTime? RevokedAt { get; private set; }
     public bool IsActive => RevokedAt == null && !IsExpired;
 
     private RefreshToken(Guid userId, string token, DateTime expiresAt)
     {
-        Id = Guid.NewGuid();
         UserId = userId;
         Token = token;
         ExpiresAt = expiresAt;
-        CreatedAt = DateTime.UtcNow;
-    }
+        Id = Guid.NewGuid();}
 
     public static Result<RefreshToken> Create(Guid userId, string token, DateTime expiresAt)
     {

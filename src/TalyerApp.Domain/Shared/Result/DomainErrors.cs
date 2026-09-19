@@ -1,4 +1,4 @@
-namespace TalyerApp.Domain.Shared;
+namespace TalyerApp.Domain.Shared.Result;
 
 public static class DomainErrors
 {

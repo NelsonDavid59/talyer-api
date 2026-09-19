@@ -1,22 +1,18 @@
-using TalyerApp.Domain.Shared;
+using TalyerApp.Domain.Shared.Result;
 
 namespace TalyerApp.Domain.Entities;
 
-public class UserProfile
+public class UserProfile : BaseEntity
 {
     public Guid UserId { get; private set; }
     public string FirstName { get; private set; }
     public string LastName { get; private set; }
-    public DateTime CreatedAt { get; private set; }
-    public DateTime UpdatedAt { get; private set; }
 
     private UserProfile(string firstName, string lastName)
     {
         UserId = Guid.NewGuid();
         FirstName = firstName;
         LastName = lastName;
-        CreatedAt = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
     }
 
     public static Result<UserProfile> Create(string firstName, string lastName)

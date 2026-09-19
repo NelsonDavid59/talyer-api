@@ -1,4 +1,4 @@
-namespace TalyerApp.Domain.Shared;
+namespace TalyerApp.Domain.Shared.Result;
 
 public sealed record Error(string Code, string Message)
 {
