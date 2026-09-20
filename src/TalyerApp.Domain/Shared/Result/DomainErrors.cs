@@ -2,27 +2,30 @@ namespace TalyerApp.Domain.Shared.Result;
 
 public static class DomainErrors
 {
-    public static class UserProfile
+    public static class User
     {
-        public static readonly Error UserProfileNotFound = 
-            Error.NotFound("UserProfile.NotFound", "User profile not found.");
+        public static readonly Error UserNotFound = 
+            Error.NotFound("User.NotFound", "User not found.");
         
-        public static readonly Error InvalidUserProfileFirstNameFormat = 
-            Error.Validation("UserProfile.InvalidFirstName", "User profile first name format is invalid.");
+        public static readonly Error InvalidUserEmailFormat = 
+            Error.Validation("User.InvalidEmail", "User email format is invalid.");
 
-        public static readonly Error InvalidUserProfileLastNameFormat = 
-            Error.Validation("UserProfile.InvalidLastName", "User profile last name format is invalid.");
+        public static readonly Error InvalidUserUsernameFormat = 
+            Error.Validation("User.InvalidUsername", "User username format is invalid.");
+
+        public static readonly Error InvalidUserNameFormat = 
+            Error.Validation("User.InvalidName", "User name format is invalid.");
+
+        public static readonly Error InvalidUserLastNameFormat = 
+            Error.Validation("User.InvalidLastName", "User last name format is invalid.");
     }
 
-    public static class RefreshToken
+    public static class ExternalIdentity
     {
-        public static readonly Error RefreshTokenNotFound = 
-            Error.NotFound("RefreshToken.NotFound", "Refresh token not found.");
-        
-        public static readonly Error InvalidTokenFormat = 
-            Error.Validation("RefreshToken.InvalidTokenFormat", "Refresh token format is invalid.");
+        public static readonly Error InvalidExternalIdentityProvider = 
+            Error.Validation("ExternalIdentity.InvalidProvider", "External identity provider is invalid.");
 
-        public static readonly Error InvalidExpirationDate = 
-            Error.Validation("RefreshToken.InvalidExpirationDate", "Refresh token expiration date is invalid.");
+        public static readonly Error InvalidExternalIdentityProviderUserId = 
+            Error.Validation("ExternalIdentity.InvalidProviderUserId", "External identity provider user ID is invalid.");
     }
 }
