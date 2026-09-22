@@ -22,6 +22,9 @@ public static class DomainErrors
 
     public static class ExternalIdentity
     {
+
+        public static readonly Error ExternalIdentityNotFound = 
+            Error.NotFound("ExternalIdentity.NotFound", "External identity not found.");
         public static readonly Error InvalidExternalIdentityProvider = 
             Error.Validation("ExternalIdentity.InvalidProvider", "External identity provider is invalid.");
 
