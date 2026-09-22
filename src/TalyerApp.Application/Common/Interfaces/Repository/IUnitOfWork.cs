@@ -1,4 +1,4 @@
-namespace TalyerApp.Application.Interfaces.Repository;
+namespace TalyerApp.Application.Common.Interfaces.Repository;
 
 public interface IUnitOfWork : IDisposable
 {

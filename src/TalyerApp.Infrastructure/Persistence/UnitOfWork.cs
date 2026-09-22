@@ -1,4 +1,4 @@
-using TalyerApp.Application.Interfaces.Repository;
+using TalyerApp.Application.Common.Interfaces.Repository;
 
 namespace TalyerApp.Infrastructure.Persistence;
 

@@ -1,5 +1,5 @@
 using TalyerApp.Domain.Entities;
-using TalyerApp.Application.Interfaces.Repository;
+using TalyerApp.Application.Common.Interfaces.Repository;
 using TalyerApp.Domain.Shared.Result;
 using Microsoft.EntityFrameworkCore;
 
