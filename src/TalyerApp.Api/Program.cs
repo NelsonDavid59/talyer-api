@@ -1,12 +1,20 @@
+using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using TalyerApp.Application.Common.Dispatching;
 using TalyerApp.Application.Common.Interfaces.CQRS;
 using TalyerApp.Application.Common.Interfaces.Repository;
 using TalyerApp.Application.Features.ExternalIdentities;
 using TalyerApp.Application.Interfaces;
+using TalyerApp.Infrastructure.Persistence;
 using TalyerApp.Infrastructure.Persistence.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Register DbContext
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+{
+   options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")); 
+});
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -20,6 +28,7 @@ builder.Services.AddScoped<IQueryDispatcher, QueryDispatcher>();
 builder.Services.AddScoped<ICommandHandler<RegisterExternalIdentityCmd, Guid>, RegisterExternalIdentityCmdHdlr>();
 
 // Register repositories and unit of work
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IUserRep, UserRep>();
 builder.Services.AddScoped<IExternalIdentityRep, ExternalIdentityRep>();
 
