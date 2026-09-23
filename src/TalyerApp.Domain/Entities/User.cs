@@ -7,19 +7,19 @@ public class User : BaseEntity
     public Guid Id { get; private set; }
     public string Email { get; private set; }
     public string Username { get; private set; }
-    public string Name { get; private set; }
+    public string FirstName { get; private set; }
     public string LastName { get; private set; }
 
-    private User(string email, string username, string name, string lastName)
+    private User(string email, string username, string firstName, string lastName)
     {
         Id = Guid.NewGuid();
         Email = email;
         Username = username;
-        Name = name;
+        FirstName = firstName;
         LastName = lastName;
     }
 
-    public static Result<User> Create(string email, string username, string name, string lastName)
+    public static Result<User> Create(string email, string username, string firstName, string lastName)
     {
         if(string.IsNullOrWhiteSpace(email))
         {
@@ -31,9 +31,9 @@ public class User : BaseEntity
             return Result<User>.Failure(DomainErrors.User.InvalidUserUsernameFormat);
         }
 
-        if(string.IsNullOrWhiteSpace(name))
+        if(string.IsNullOrWhiteSpace(firstName))
         {
-            return Result<User>.Failure(DomainErrors.User.InvalidUserNameFormat);
+            return Result<User>.Failure(DomainErrors.User.InvalidUserFirstNameFormat);
         }
 
         if(string.IsNullOrWhiteSpace(lastName))
@@ -41,6 +41,6 @@ public class User : BaseEntity
             return Result<User>.Failure(DomainErrors.User.InvalidUserLastNameFormat);
         }
 
-        return Result<User>.Success(new User(email, username, name, lastName));
+        return Result<User>.Success(new User(email, username, firstName, lastName));
     }
 }

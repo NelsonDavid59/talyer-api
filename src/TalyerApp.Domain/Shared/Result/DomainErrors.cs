@@ -13,8 +13,8 @@ public static class DomainErrors
         public static readonly Error InvalidUserUsernameFormat = 
             Error.Validation("User.InvalidUsername", "User username format is invalid.");
 
-        public static readonly Error InvalidUserNameFormat = 
-            Error.Validation("User.InvalidName", "User name format is invalid.");
+        public static readonly Error InvalidUserFirstNameFormat = 
+            Error.Validation("User.InvalidFirstName", "User first name format is invalid.");
 
         public static readonly Error InvalidUserLastNameFormat = 
             Error.Validation("User.InvalidLastName", "User last name format is invalid.");

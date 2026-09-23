@@ -16,8 +16,8 @@ public class UnitOfWork : IUnitOfWork
         _context.Dispose();
     }
 
-    public Task<int> SaveChangesAsync()
+    public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        return _context.SaveChangesAsync();
+        return _context.SaveChangesAsync(cancellationToken);
     }
 }

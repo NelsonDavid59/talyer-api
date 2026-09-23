@@ -1,10 +1,28 @@
 using Scalar.AspNetCore;
+using TalyerApp.Application.Common.Dispatching;
+using TalyerApp.Application.Common.Interfaces.CQRS;
+using TalyerApp.Application.Common.Interfaces.Repository;
+using TalyerApp.Application.Features.ExternalIdentities;
+using TalyerApp.Application.Interfaces;
+using TalyerApp.Infrastructure.Persistence.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+// Register the command and query dispatchers
+builder.Services.AddScoped<ICommandDispatcher, CommandDispatcher>();
+builder.Services.AddScoped<IQueryDispatcher, QueryDispatcher>();
+
+// Register the command and query handlers
+builder.Services.AddScoped<ICommandHandler<RegisterExternalIdentityCmd, Guid>, RegisterExternalIdentityCmdHdlr>();
+
+// Register repositories and unit of work
+builder.Services.AddScoped<IUserRep, UserRep>();
+builder.Services.AddScoped<IExternalIdentityRep, ExternalIdentityRep>();
+
 
 // Add authentication services
 builder.Services.AddAuthentication()

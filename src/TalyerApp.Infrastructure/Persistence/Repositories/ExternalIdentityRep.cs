@@ -2,9 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using TalyerApp.Application.Common.Interfaces.Repository;
 using TalyerApp.Domain.Entities;
 using TalyerApp.Domain.Shared.Result;
-using TalyerApp.Infrastructure.Persistence;
 
-namespace TalyerApp.Ifrastructure.Persistence.Repositories;
+namespace TalyerApp.Infrastructure.Persistence.Repositories;
 
 public class ExternalIdentityRep : IExternalIdentityRep
 {
@@ -40,5 +39,11 @@ public class ExternalIdentityRep : IExternalIdentityRep
         }
 
         return Result<ExternalIdentity>.Success(externalIdentity);
+    }
+
+    public async Task<bool> ExistsAsync(string provider, string providerUserId)
+    {
+        return await _dbSet.AnyAsync(x => x.Provider.Equals(provider) 
+                                    && x.ProviderUserId.Equals(providerUserId));
     }
 }
