@@ -10,6 +10,8 @@ public class ExternalIdentity : BaseEntity
 
     public string ProviderUserId { get; private set; }
 
+    public User User { get; set; }
+
     private ExternalIdentity(Guid userId, string provider, string providerUserId)
     {
         UserId = userId;

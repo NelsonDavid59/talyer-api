@@ -10,6 +10,8 @@ public class User : BaseEntity
     public string FirstName { get; private set; }
     public string LastName { get; private set; }
 
+    public ICollection<ExternalIdentity> ExternalIdentities { get; set; }
+
     private User(string email, string username, string firstName, string lastName)
     {
         Id = Guid.NewGuid();
