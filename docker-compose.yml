@@ -10,5 +10,6 @@ services:
     command: ["start-dev"]
     volumes:
       - keycloak_data:/opt/keycloak/data
+    user: root #development only
 volumes:
   keycloak_data:
