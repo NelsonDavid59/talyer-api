@@ -12,14 +12,15 @@ public class RolePermissionConfig : IEntityTypeConfiguration<RolePermission>
         builder.HasKey(rp => new { rp.RoleId, rp.PermissionId });
 
         builder.HasIndex(rp => new { rp.RoleId, rp.PermissionId })
-                .IsUnique();
+                .IsUnique()
+                .HasDatabaseName(UniqueConstraintNames.RolePermissionRoleIdPermissionId);
 
         // Many to many relationship
         builder.HasOne<Role>(rp => rp.Role)
                 .WithMany()
                 .HasForeignKey(rp => rp.RoleId)
                 .OnDelete(DeleteBehavior.Cascade);
-        
+
         builder.HasOne<Permission>(rp => rp.Permission)
                 .WithMany()
                 .HasForeignKey(rp => rp.PermissionId)

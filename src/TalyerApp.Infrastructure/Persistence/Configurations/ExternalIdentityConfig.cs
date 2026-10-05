@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using TalyerApp.Domain.Entities;
+using TalyerApp.Infrastructure.Persistence;
 
 namespace TalyerApp.Infrastructure.Persistence.Configurations;
 
@@ -12,6 +13,7 @@ public class ExternalIdentityConfig : IEntityTypeConfiguration<ExternalIdentity>
 
         // Unique constraint for Provider and ProviderUserId keys
         builder.HasIndex(ei => new {ei.Provider, ei.ProviderUserId})
-                .IsUnique();
+                .IsUnique()
+                .HasDatabaseName(UniqueConstraintNames.ExternalIdentityProviderProviderUserId);
     }
 }

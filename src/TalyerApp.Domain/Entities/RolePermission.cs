@@ -2,7 +2,7 @@ using TalyerApp.Domain.Shared.Result;
 
 namespace TalyerApp.Domain.Entities;
 
-public class RolePermission : IBaseEntity
+public class RolePermission : BaseEntity
 {
     public int RoleId { get; private set; }
     public int PermissionId { get; private set; }
@@ -18,12 +18,12 @@ public class RolePermission : IBaseEntity
 
     public static Result<RolePermission> Create(int roleId, int permissionId)
     {
-        if(roleId < 0)
+        if(roleId <= 0)
         {
             return Result<RolePermission>.Failure(DomainErrors.RolePermission.RolePermissionInvalidRoleId);
         }
 
-        if(permissionId < 0)
+        if(permissionId <= 0)
         {
             return Result<RolePermission>.Failure(DomainErrors.RolePermission.RolePermissionInvalidPermissionId);
         }

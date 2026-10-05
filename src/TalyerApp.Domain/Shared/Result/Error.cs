@@ -1,11 +1,12 @@
 namespace TalyerApp.Domain.Shared.Result;
 
-public sealed record Error(string Code, string Message)
+public sealed record Error(string Code, ErrorCategory Category) : IDomainError
 {
-    // Represents the absence of an error.
-    public static readonly Error None = new Error(string.Empty, string.Empty);
+    public static readonly Error None = new(string.Empty, ErrorCategory.Validation);
 
-    public static Error NotFound(string code, string message) => new Error(code, message);
+    public static Error NotFound(string code) => new(code, ErrorCategory.NotFound);
 
-    public static Error Validation(string code, string message) => new Error(code, message);
+    public static Error Validation(string code) => new(code, ErrorCategory.Validation);
+
+    public static Error Conflict(string code) => new(code, ErrorCategory.Conflict);
 }

@@ -21,4 +21,8 @@
     <ProjectReference Include="..\TalyerApp.Infrastructure\TalyerApp.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="Resources\Errors\*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

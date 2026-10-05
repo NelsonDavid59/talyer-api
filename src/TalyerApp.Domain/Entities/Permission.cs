@@ -2,7 +2,7 @@ using TalyerApp.Domain.Shared.Result;
 
 namespace TalyerApp.Domain.Entities;
 
-public class Permission : IBaseEntity
+public class Permission : BaseEntity
 {
     public int Id { get; }
     public string Code { get; private set; }

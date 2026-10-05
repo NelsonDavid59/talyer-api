@@ -14,5 +14,10 @@ public class UserConfig : IEntityTypeConfiguration<User>
             .WithOne(ei => ei.User)
             .HasForeignKey(ei => ei.UserId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Property(u => u.Email).HasMaxLength(100).IsRequired();
+        builder.Property(u => u.Username).HasMaxLength(150).IsRequired();
+        builder.Property(u => u.FirstName).HasMaxLength(150).IsRequired();
+        builder.Property(u => u.LastName).HasMaxLength(150).IsRequired();
     }
 }

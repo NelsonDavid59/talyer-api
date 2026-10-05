@@ -6,7 +6,11 @@ using TalyerApp.Application.Common.Interfaces.CQRS;
 using TalyerApp.Application.Common.Interfaces.Repository;
 using TalyerApp.Application.Dto;
 using TalyerApp.Application.Features.ExternalIdentities;
+using TalyerApp.Application.Features.UserRoleAssignments;
+using TalyerApp.Application.Common.Interfaces.Localization;
+using TalyerApp.Application.Common.Interfaces.Persistence;
 using TalyerApp.Application.Interfaces;
+using TalyerApp.Api.Localization;
 using TalyerApp.Infrastructure.Persistence;
 using TalyerApp.Infrastructure.Persistence.Repositories;
 using System.Security.Claims;
@@ -31,11 +35,22 @@ builder.Services.AddScoped<IQueryDispatcher, QueryDispatcher>();
 
 // Register the command and query handlers
 builder.Services.AddScoped<ICommandHandler<RegisterExternalIdentityCmd, Guid>, RegisterExternalIdentityCmdHdlr>();
+builder.Services.AddScoped<ICommandHandler<AssignUserRoleCmd, int>, AssignUserRoleCmdHdlr>();
 
 // Register repositories and unit of work
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IUserRep, UserRep>();
 builder.Services.AddScoped<IExternalIdentityRep, ExternalIdentityRep>();
+builder.Services.AddScoped<IUserRoleAssignmentRep, UserRoleAssignmentRep>();
+builder.Services.AddScoped<IRoleRep, RoleRep>();
+builder.Services.AddScoped<ITenantRep, TenantRep>();
+builder.Services.AddScoped<IBranchRep, BranchRep>();
+builder.Services.AddSingleton<ErrorCatalog>();
+builder.Services.AddSingleton<IErrorMessageResolver, JsonErrorMessageResolver>();
+builder.Services.AddSingleton<IErrorHttpStatusMapper, ErrorHttpStatusMapper>();
+builder.Services.AddSingleton<ErrorCatalogValidator>();
+builder.Services.AddSingleton<IUniqueConstraintRegistry>(_ => UniqueConstraintRegistry.Create());
+builder.Services.AddScoped<IDatabaseExceptionTranslator, PostgresDatabaseExceptionTranslator>();
 
 JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
 
@@ -85,7 +100,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
                 if (result.IsFailure)
                 {
-                    context.Fail(result.Error.Message);
+                    var messageResolver = context.HttpContext.RequestServices
+                        .GetRequiredService<IErrorMessageResolver>();
+                    context.Fail(messageResolver.ResolveMessage(result.Error));
                     return;
                 }
 
@@ -138,6 +155,8 @@ builder.Services.AddOpenApi(options =>
 });
 
 var app = builder.Build();
+
+app.Services.GetRequiredService<ErrorCatalogValidator>().Validate();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
