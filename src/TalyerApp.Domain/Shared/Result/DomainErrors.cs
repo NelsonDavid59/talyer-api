@@ -67,6 +67,9 @@ public static class DomainErrors
         public static readonly Error TenantNotFound = Error.NotFound(ErrorCodes.Tenant.NotFound);
         public static readonly Error TenantInvalidDescription =
             Error.Validation(ErrorCodes.Tenant.InvalidDescription);
+
+        public static readonly Error TenantInvalidCode =
+            Error.Validation(ErrorCodes.Tenant.InvalidCode);
     }
 
     public static class Branch
@@ -97,5 +100,8 @@ public static class DomainErrors
 
         public static readonly Error AlreadyExists =
             Error.Conflict(ErrorCodes.UserRoleAssignment.AlreadyExists);
+
+        public static readonly Error RoleNotAllowedForTenantType =
+            Error.Validation(ErrorCodes.UserRoleAssignment.RoleNotAllowedForTenantType);
     }
 }

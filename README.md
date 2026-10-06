@@ -76,6 +76,22 @@ dotnet ef database update \
 
 > La cadena de conexion y la configuracion de PostgreSQL deben definirse antes de ejecutar migraciones o actualizar la base de datos.
 
+## Datos de referencia (seed)
+
+Despues de aplicar las migraciones (incluida `AddTenantCodeAndType` cuando exista en el proyecto), el comando `seed` es idempotente y carga:
+
+- Permisos, roles y `RolePermissions` (`RbacCatalog`)
+- Tenant de plataforma (`Code = platform`, `Type = PLATFORM`) via `PlatformTenantCatalog`
+
+```bash
+dotnet run --project src/TalyerApp.Api/TalyerApp.Api.csproj -- seed
+```
+
+Orden recomendado en un entorno nuevo:
+
+1. `dotnet ef database update` (ver seccion Entity Framework Core)
+2. `dotnet run ... -- seed`
+
 ## Estructura del proyecto
 
 ```text

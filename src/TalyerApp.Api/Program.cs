@@ -13,6 +13,7 @@ using TalyerApp.Application.Interfaces;
 using TalyerApp.Api.Localization;
 using TalyerApp.Infrastructure.Persistence;
 using TalyerApp.Infrastructure.Persistence.Repositories;
+using TalyerApp.Infrastructure.Persistence.Seeding;
 using System.Security.Claims;
 using Microsoft.OpenApi;
 using System.IdentityModel.Tokens.Jwt;
@@ -51,6 +52,9 @@ builder.Services.AddSingleton<IErrorHttpStatusMapper, ErrorHttpStatusMapper>();
 builder.Services.AddSingleton<ErrorCatalogValidator>();
 builder.Services.AddSingleton<IUniqueConstraintRegistry>(_ => UniqueConstraintRegistry.Create());
 builder.Services.AddScoped<IDatabaseExceptionTranslator, PostgresDatabaseExceptionTranslator>();
+builder.Services.AddScoped<RbacReferenceDataSeeder>();
+builder.Services.AddScoped<PlatformTenantReferenceDataSeeder>();
+builder.Services.AddScoped<IReferenceDataSeeder, ReferenceDataSeeder>();
 
 JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
 
@@ -155,6 +159,14 @@ builder.Services.AddOpenApi(options =>
 });
 
 var app = builder.Build();
+
+if (args.Contains("seed", StringComparer.OrdinalIgnoreCase))
+{
+    await using var scope = app.Services.CreateAsyncScope();
+    var seeder = scope.ServiceProvider.GetRequiredService<IReferenceDataSeeder>();
+    await seeder.SeedAsync();
+    return;
+}
 
 app.Services.GetRequiredService<ErrorCatalogValidator>().Validate();
 

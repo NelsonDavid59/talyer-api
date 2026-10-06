@@ -21,6 +21,7 @@
   "RolePermission.AlreadyExists": "This role permission assignment already exists.",
   "Tenant.NotFound": "Tenant not found.",
   "Tenant.InvalidDescription": "Tenant Description is invalid.",
+  "Tenant.InvalidCode": "Tenant Code is invalid.",
   "Branch.NotFound": "Branch not found.",
   "Branch.InvalidTenantId": "Branch TenantId is invalid.",
   "Branch.InvalidDescription": "Branch Description is invalid.",
@@ -29,5 +30,6 @@
   "UserRoleAssignment.InvalidRoleId": "UserRoleAssignment RoleId is invalid.",
   "UserRoleAssignment.InvalidTenantId": "UserRoleAssignment TenantId is invalid.",
   "UserRoleAssignment.InvalidBranchId": "UserRoleAssignment BranchId is invalid.",
-  "UserRoleAssignment.AlreadyExists": "This role assignment already exists for the user in the given tenant or branch."
+  "UserRoleAssignment.AlreadyExists": "This role assignment already exists for the user in the given tenant or branch.",
+  "UserRoleAssignment.RoleNotAllowedForTenantType": "This role cannot be assigned for the given tenant type or branch scope."
 }

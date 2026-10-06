@@ -1,6 +1,7 @@
 using TalyerApp.Application.Common.Interfaces.CQRS;
 using TalyerApp.Application.Common.Interfaces.Persistence;
 using TalyerApp.Application.Common.Interfaces.Repository;
+using TalyerApp.Domain.Authorization;
 using TalyerApp.Domain.Entities;
 using TalyerApp.Domain.Shared.Result;
 
@@ -68,6 +69,14 @@ public class AssignUserRoleCmdHdlr : ICommandHandler<AssignUserRoleCmd, int>
         if (tenantResult.IsFailure)
         {
             return Result<int>.Failure(tenantResult.Error);
+        }
+
+        var role = roleResult.Value;
+        var tenant = tenantResult.Value;
+
+        if (!RoleTenantAssignmentRules.IsAllowed(role.Code, tenant.Type, command.BranchId))
+        {
+            return Result<int>.Failure(DomainErrors.UserRoleAssignment.RoleNotAllowedForTenantType);
         }
 
         // check if branch exists

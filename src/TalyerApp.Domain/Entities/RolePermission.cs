@@ -10,10 +10,10 @@ public class RolePermission : BaseEntity
     public Role Role { get; }
     public Permission Permission { get; }
 
-    private RolePermission(int roleId, int permissionid)
+    private RolePermission(int roleId, int permissionId)
     {
         RoleId = roleId;
-        PermissionId = permissionid;
+        PermissionId = permissionId;
     }
 
     public static Result<RolePermission> Create(int roleId, int permissionId)

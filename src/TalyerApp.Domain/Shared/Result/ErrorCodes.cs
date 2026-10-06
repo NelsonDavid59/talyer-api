@@ -50,6 +50,7 @@ public static class ErrorCodes
     {
         public const string NotFound = "Tenant.NotFound";
         public const string InvalidDescription = "Tenant.InvalidDescription";
+        public const string InvalidCode = "Tenant.InvalidCode";
     }
 
     public static class Branch
@@ -67,5 +68,6 @@ public static class ErrorCodes
         public const string InvalidTenantId = "UserRoleAssignment.InvalidTenantId";
         public const string InvalidBranchId = "UserRoleAssignment.InvalidBranchId";
         public const string AlreadyExists = "UserRoleAssignment.AlreadyExists";
+        public const string RoleNotAllowedForTenantType = "UserRoleAssignment.RoleNotAllowedForTenantType";
     }
 }
