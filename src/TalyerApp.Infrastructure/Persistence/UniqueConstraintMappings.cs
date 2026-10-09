@@ -10,7 +10,8 @@ public static class UniqueConstraintMappings
         new(UniqueConstraintNames.UserRoleAssignmentPerBranch, DomainErrors.UserRoleAssignment.AlreadyExists),
         new(UniqueConstraintNames.ExternalIdentityProviderProviderUserId, DomainErrors.ExternalIdentity.AlreadyExists),
         new(UniqueConstraintNames.RolePermissionRoleIdPermissionId, DomainErrors.RolePermission.AlreadyExists),
-        new(UniqueConstraintNames.BranchTenantIdId, DomainErrors.Branch.AlreadyExists)
+        new(UniqueConstraintNames.BranchTenantIdId, DomainErrors.Branch.AlreadyExists),
+        new(UniqueConstraintNames.UserEmail, DomainErrors.User.AlreadyExists)
     ];
 
     public static IReadOnlyList<UniqueConstraintTableFallback> GetTableFallbacks() =>
@@ -18,6 +19,7 @@ public static class UniqueConstraintMappings
         new("UserRoleAssignments", DomainErrors.UserRoleAssignment.AlreadyExists),
         new("ExternalIdentities", DomainErrors.ExternalIdentity.AlreadyExists),
         new("RolePermissions", DomainErrors.RolePermission.AlreadyExists),
-        new("Branches", DomainErrors.Branch.AlreadyExists)
+        new("Branches", DomainErrors.Branch.AlreadyExists),
+        new("Users", DomainErrors.User.AlreadyExists)
     ];
 }

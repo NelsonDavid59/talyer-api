@@ -43,6 +43,9 @@ public class UserRep : IUserRep
         return Result<User>.Success(user);
     }
 
+    public Task<bool> ExistsByEmailAsync(string email, CancellationToken cancellationToken = default) =>
+        _context.Users.AnyAsync(u => u.Email == email, cancellationToken);
+
     public void Add(User user)
     {
         _context.Users.Add(user);

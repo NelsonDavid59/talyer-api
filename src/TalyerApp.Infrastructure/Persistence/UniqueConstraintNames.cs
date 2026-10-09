@@ -16,4 +16,6 @@ public static class UniqueConstraintNames
 
     public const string BranchTenantIdId =
         "IX_Branches_TenantId_Id";
+
+    public const string UserEmail = "IX_Users_Email";
 }

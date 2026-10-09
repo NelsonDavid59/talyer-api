@@ -6,4 +6,6 @@ namespace TalyerApp.Application.Common.Interfaces.Repository;
 public interface IRoleRep
 {
     Task<Result<Role>> GetByIdAsync(int id, CancellationToken cancellationToken = default);
+
+    Task<Result<Role>> GetByCodeAsync(string code, CancellationToken cancellationToken = default);
 }

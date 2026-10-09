@@ -76,6 +76,75 @@ namespace TalyerApp.Infrastructure.Migrations
                     b.ToTable("ExternalIdentities");
                 });
 
+            modelBuilder.Entity("TalyerApp.Domain.Entities.MembershipRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CompanyName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("EmailVerificationExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("EmailVerificationTokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<string>("RejectedReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<int?>("TenantId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique()
+                        .HasDatabaseName("IX_MembershipRequests_Email_Active")
+                        .HasFilter("\"Status\" IN ('PendingEmailVerification', 'PendingReview')");
+
+                    b.HasIndex("EmailVerificationTokenHash");
+
+                    b.ToTable("MembershipRequests");
+                });
+
             modelBuilder.Entity("TalyerApp.Domain.Entities.Permission", b =>
                 {
                     b.Property<int>("Id")
@@ -168,6 +237,11 @@ namespace TalyerApp.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -176,13 +250,25 @@ namespace TalyerApp.Infrastructure.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("character varying(150)");
 
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Code")
+                        .IsUnique();
+
                     b.HasIndex("Description")
                         .IsUnique();
+
+                    b.HasIndex("Type")
+                        .IsUnique()
+                        .HasFilter("\"Type\" = 'PLATFORM'");
 
                     b.ToTable("Tenants");
                 });
@@ -220,6 +306,10 @@ namespace TalyerApp.Infrastructure.Migrations
                         .HasColumnType("character varying(150)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Users_Email");
 
                     b.ToTable("Users");
                 });

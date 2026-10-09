@@ -1,3 +1,5 @@
+using TalyerApp.Domain.Authorization;
+
 namespace TalyerApp.Infrastructure.Persistence.Seeding;
 
 public static class RbacCatalog
@@ -8,16 +10,16 @@ public static class RbacCatalog
 
     public static IReadOnlyList<PermissionDefinition> Permissions =>
     [
-        new("tenants.manage"),
-        new("branches.manage"),
-        new("users.assign_roles"),
+        new(PermissionCodes.TenantsManage),
+        new(PermissionCodes.BranchesManage),
+        new(PermissionCodes.UsersAssignRoles),
+        new(PermissionCodes.UsersInvite),
     ];
 
     public static IReadOnlyList<RoleDefinition> Roles =>
     [
-        new("platform_admin", "Platform Administrator"),
-        new("tenant_admin", "Tenant Administrator"),
-        new("member", "Member"),
+        new(RoleCodes.PlatformAdmin, "Platform Administrator"),
+        new(RoleCodes.TenantAdmin, "Tenant Administrator"),
     ];
 
     /// <summary>
@@ -26,17 +28,18 @@ public static class RbacCatalog
     public static IReadOnlyDictionary<string, string[]> RolePermissions =>
         new Dictionary<string, string[]>(StringComparer.Ordinal)
         {
-            ["platform_admin"] =
+            [RoleCodes.PlatformAdmin] =
             [
-                "tenants.manage",
-                "branches.manage",
-                "users.assign_roles",
+                PermissionCodes.TenantsManage,
+                PermissionCodes.BranchesManage,
+                PermissionCodes.UsersAssignRoles,
+                PermissionCodes.UsersInvite,
             ],
-            ["tenant_admin"] =
+            [RoleCodes.TenantAdmin] =
             [
-                "branches.manage",
-                "users.assign_roles",
+                PermissionCodes.BranchesManage,
+                PermissionCodes.UsersAssignRoles,
+                PermissionCodes.UsersInvite,
             ],
-            ["member"] = [],
         };
 }

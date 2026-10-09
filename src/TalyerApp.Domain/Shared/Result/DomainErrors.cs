@@ -17,6 +17,9 @@ public static class DomainErrors
 
         public static readonly Error InvalidUserLastNameFormat =
             Error.Validation(ErrorCodes.User.InvalidLastName);
+
+        public static readonly Error AlreadyExists =
+            Error.Conflict(ErrorCodes.User.AlreadyExists);
     }
 
     public static class ExternalIdentity
@@ -70,6 +73,60 @@ public static class DomainErrors
 
         public static readonly Error TenantInvalidCode =
             Error.Validation(ErrorCodes.Tenant.InvalidCode);
+
+        public static readonly Error AlreadyExists =
+            Error.Conflict(ErrorCodes.Tenant.AlreadyExists);
+
+        public static readonly Error CodeGenerationFailed =
+            Error.Conflict(ErrorCodes.Tenant.CodeGenerationFailed);
+    }
+
+    public static class Authorization
+    {
+        public static readonly Error Forbidden =
+            Error.Forbidden(ErrorCodes.Authorization.Forbidden);
+    }
+
+    public static class MembershipRequest
+    {
+        public static readonly Error NotFound =
+            Error.NotFound(ErrorCodes.MembershipRequest.NotFound);
+
+        public static readonly Error InvalidCompanyName =
+            Error.Validation(ErrorCodes.MembershipRequest.InvalidCompanyName);
+
+        public static readonly Error InvalidEmail =
+            Error.Validation(ErrorCodes.MembershipRequest.InvalidEmail);
+
+        public static readonly Error InvalidFirstName =
+            Error.Validation(ErrorCodes.MembershipRequest.InvalidFirstName);
+
+        public static readonly Error InvalidLastName =
+            Error.Validation(ErrorCodes.MembershipRequest.InvalidLastName);
+
+        public static readonly Error InvalidToken =
+            Error.Validation(ErrorCodes.MembershipRequest.InvalidToken);
+
+        public static readonly Error TokenExpired =
+            Error.Validation(ErrorCodes.MembershipRequest.TokenExpired);
+
+        public static readonly Error AlreadyExists =
+            Error.Conflict(ErrorCodes.MembershipRequest.AlreadyExists);
+
+        public static readonly Error InvalidStatus =
+            Error.Validation(ErrorCodes.MembershipRequest.InvalidStatus);
+
+        public static readonly Error IdentityProviderError =
+            Error.Validation(ErrorCodes.MembershipRequest.IdentityProviderError);
+    }
+
+    public static class IdentityAdmin
+    {
+        public static readonly Error UserAlreadyExists =
+            Error.Conflict(ErrorCodes.IdentityAdmin.UserAlreadyExists);
+
+        public static readonly Error OperationFailed =
+            Error.Validation(ErrorCodes.IdentityAdmin.OperationFailed);
     }
 
     public static class Branch

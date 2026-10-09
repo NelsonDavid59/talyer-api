@@ -7,5 +7,8 @@ public interface IUserRep : IBaseRepository<User>
 {
     public Task<Result<User>> GetByIdAsync(Guid id);
     public Task<Result<User>> GetByEmailAsync(string email);
+
+    Task<bool> ExistsByEmailAsync(string email, CancellationToken cancellationToken = default);
+
     public void Add(User user);
 }

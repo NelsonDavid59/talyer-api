@@ -4,5 +4,6 @@ public enum ErrorCategory
 {
     NotFound,
     Validation,
-    Conflict
+    Conflict,
+    Forbidden
 }

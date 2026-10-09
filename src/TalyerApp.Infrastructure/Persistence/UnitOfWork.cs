@@ -20,4 +20,11 @@ public class UnitOfWork : IUnitOfWork
     {
         return _context.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task ExecuteInTransactionAsync(Func<Task> action, CancellationToken cancellationToken = default)
+    {
+        await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+        await action();
+        await transaction.CommitAsync(cancellationToken);
+    }
 }

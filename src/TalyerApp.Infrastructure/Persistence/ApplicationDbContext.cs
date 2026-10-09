@@ -31,4 +31,6 @@ public class ApplicationDbContext : DbContext
     public DbSet<RolePermission> RolePermissions { get; set; }
 
     public DbSet<UserRoleAssignment> UserRoleAssignments { get; set; }
+
+    public DbSet<MembershipRequest> MembershipRequests { get; set; }
 }

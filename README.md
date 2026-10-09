@@ -91,6 +91,96 @@ Orden recomendado en un entorno nuevo:
 
 1. `dotnet ef database update` (ver seccion Entity Framework Core)
 2. `dotnet run ... -- seed`
+3. Bootstrap del super usuario (ver seccion siguiente)
+
+## Bootstrap platform admin
+
+Crea en la base de datos el primer usuario operativo con rol `platform_admin` en el tenant `platform`, enlazado al usuario de Keycloak mediante `ExternalIdentity` (`provider` + `sub`).
+
+**Prerrequisitos:** usuario ya creado en Keycloak; migraciones aplicadas; `seed` ejecutado.
+
+### Development
+
+1. Copiar la plantilla (el archivo real esta en `.gitignore` y no se commitea):
+
+```bash
+cp src/TalyerApp.Api/usersecrets.example.json src/TalyerApp.Api/usersecrets.json
+```
+
+2. Completar `Bootstrap:PlatformAdmin` en `usersecrets.json`. El campo `ProviderUserId` debe ser el **ID de usuario** de Keycloak (claim `sub` del JWT). En la consola de administracion: realm → Users → usuario → campo **ID**.
+
+3. Los demas campos deben coincidir con el perfil y los claims del token (`email`, `preferred_username`, `given_name`, `family_name`).
+
+4. Ejecutar (con `ASPNETCORE_ENVIRONMENT=Development`, p. ej. perfil por defecto de `launchSettings.json`):
+
+```bash
+dotnet run --project src/TalyerApp.Api/TalyerApp.Api.csproj -- bootstrap-platform-admin
+```
+
+Las variables de entorno `Bootstrap__PlatformAdmin__*` tienen prioridad sobre `usersecrets.json` si ambas estan definidas.
+
+### Production
+
+No se carga `usersecrets.json`. Definir variables de entorno en el host o contenedor:
+
+| Variable | Obligatorio | Descripcion |
+|----------|-------------|-------------|
+| `Bootstrap__PlatformAdmin__ProviderUserId` | Si | UUID `sub` de Keycloak |
+| `Bootstrap__PlatformAdmin__Email` | Si | Claim `email` |
+| `Bootstrap__PlatformAdmin__Username` | Si | Claim `preferred_username` |
+| `Bootstrap__PlatformAdmin__FirstName` | Si | Claim `given_name` |
+| `Bootstrap__PlatformAdmin__LastName` | Si | Claim `family_name` |
+| `Bootstrap__PlatformAdmin__Provider` | No | Default: `keycloak` |
+
+Ejemplo en Docker Compose:
+
+```yaml
+environment:
+  ASPNETCORE_ENVIRONMENT: Production
+  Bootstrap__PlatformAdmin__ProviderUserId: "<sub-keycloak>"
+  Bootstrap__PlatformAdmin__Email: "admin@example.com"
+  Bootstrap__PlatformAdmin__Username: "platform.admin"
+  Bootstrap__PlatformAdmin__FirstName: "Platform"
+  Bootstrap__PlatformAdmin__LastName: "Admin"
+```
+
+Ejecutar el mismo comando bootstrap en el job o contenedor de inicializacion acordado.
+
+El comando es idempotente: puede ejecutarse de nuevo sin duplicar usuario ni asignacion.
+
+## Solicitud de membresia e invitacion
+
+Flujo de alta de un taller (tenant `CUSTOMER` + `tenant_admin`). El formulario **no** crea usuario en Keycloak. El `platform_admin` aprueba y ahi se crea la cuenta en el IdP (la invitacion **es** el registro: el interesado define contrasena con el mail de Keycloak).
+
+Cualquiera puede solicitar membresia (demo / MVP, sin pago). El filtro es la aprobacion del `platform_admin`.
+
+### Development
+
+Completar en `usersecrets.json` (ver `usersecrets.example.json`):
+
+- `Keycloak:Admin`: client confidential de servicio (`talyer-api-admin`) con `manage-users` en el realm `talyer-realm`.
+- `Membership:ConfirmEmailBaseUrl`: origen de la API o del front (el mail de verificacion Talyer se **loguea** en consola; no hay SMTP en este MVP).
+
+En Keycloak: Clients → Create → `talyer-api-admin`, Client authentication ON, Service accounts roles → realm-management → `manage-users`.
+
+### Endpoints
+
+Publicos (sin JWT):
+
+- `POST /membership-requests`
+- `POST /membership-requests/confirm-email` body `{ "token": "..." }` (el token sale en el log de la API)
+
+Autenticados (OAuth en Scalar, usuario `platform_admin`):
+
+- `GET /membership-requests?status=PendingReview`
+- `POST /membership-requests/{id}/approve`
+- `POST /membership-requests/{id}/reject`
+
+Probar en http://localhost:5066/talyer-app-api
+
+Si el save en Talyer falla despues de crear el usuario en Keycloak, la API intenta **borrar** ese usuario en Keycloak.
+
+Un email = un usuario Talyer en este MVP (`Users.Email` unique). Nombre de empresa duplicado (`Tenant.Description`) rechaza la solicitud.
 
 ## Estructura del proyecto
 

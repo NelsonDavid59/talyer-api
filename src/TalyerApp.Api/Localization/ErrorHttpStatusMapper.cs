@@ -10,6 +10,7 @@ public class ErrorHttpStatusMapper : IErrorHttpStatusMapper
         ErrorCategory.NotFound => StatusCodes.Status404NotFound,
         ErrorCategory.Validation => StatusCodes.Status400BadRequest,
         ErrorCategory.Conflict => StatusCodes.Status409Conflict,
+        ErrorCategory.Forbidden => StatusCodes.Status403Forbidden,
         _ => StatusCodes.Status500InternalServerError
     };
 }

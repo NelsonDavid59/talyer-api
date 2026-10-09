@@ -11,8 +11,7 @@ public static class RoleTenantAssignmentRules
             return tenantType == TenantType.Platform && branchId is null;
         }
 
-        if (string.Equals(roleCode, RoleCodes.TenantAdmin, StringComparison.Ordinal) ||
-            string.Equals(roleCode, RoleCodes.Member, StringComparison.Ordinal))
+        if (string.Equals(roleCode, RoleCodes.TenantAdmin, StringComparison.Ordinal))
         {
             return tenantType == TenantType.Customer;
         }

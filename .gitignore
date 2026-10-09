@@ -12,3 +12,6 @@
 ## Archivos de publish o paquetes
 *.nupkg
 publish/
+
+## Bootstrap local (Development)
+src/TalyerApp.Api/usersecrets.json

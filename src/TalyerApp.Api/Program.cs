@@ -7,7 +7,16 @@ using TalyerApp.Application.Common.Interfaces.Repository;
 using TalyerApp.Application.Dto;
 using TalyerApp.Application.Features.ExternalIdentities;
 using TalyerApp.Application.Features.UserRoleAssignments;
+using TalyerApp.Application.Features.MembershipRequests;
+using TalyerApp.Application.Common.Authorization;
+using TalyerApp.Application.Common.Interfaces.Identity;
+using TalyerApp.Application.Common.Interfaces.Notifications;
 using TalyerApp.Application.Common.Interfaces.Localization;
+using TalyerApp.Api.Extensions;
+using TalyerApp.Domain.Shared.Membership;
+using TalyerApp.Infrastructure.Identity;
+using TalyerApp.Infrastructure.Notifications;
+using Microsoft.Extensions.Options;
 using TalyerApp.Application.Common.Interfaces.Persistence;
 using TalyerApp.Application.Interfaces;
 using TalyerApp.Api.Localization;
@@ -19,6 +28,21 @@ using Microsoft.OpenApi;
 using System.IdentityModel.Tokens.Jwt;
 
 var builder = WebApplication.CreateBuilder(args);
+
+if (builder.Environment.IsDevelopment())
+{
+    builder.Configuration.AddJsonFile(
+        Path.Combine(builder.Environment.ContentRootPath, "usersecrets.json"),
+        optional: true,
+        reloadOnChange: false);
+}
+
+builder.Services.Configure<PlatformAdminBootstrapOptions>(
+    builder.Configuration.GetSection(PlatformAdminBootstrapOptions.SectionName));
+builder.Services.Configure<KeycloakAdminOptions>(
+    builder.Configuration.GetSection(KeycloakAdminOptions.SectionName));
+builder.Services.Configure<MembershipOptions>(
+    builder.Configuration.GetSection(MembershipOptions.SectionName));
 
 // Register DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -37,6 +61,11 @@ builder.Services.AddScoped<IQueryDispatcher, QueryDispatcher>();
 // Register the command and query handlers
 builder.Services.AddScoped<ICommandHandler<RegisterExternalIdentityCmd, Guid>, RegisterExternalIdentityCmdHdlr>();
 builder.Services.AddScoped<ICommandHandler<AssignUserRoleCmd, int>, AssignUserRoleCmdHdlr>();
+builder.Services.AddScoped<ICommandHandler<SubmitMembershipRequestCmd, int>, SubmitMembershipRequestCmdHdlr>();
+builder.Services.AddScoped<ICommandHandler<ConfirmMembershipRequestEmailCmd, int>, ConfirmMembershipRequestEmailCmdHdlr>();
+builder.Services.AddScoped<ICommandHandler<ApproveMembershipRequestCmd, int>, ApproveMembershipRequestCmdHdlr>();
+builder.Services.AddScoped<ICommandHandler<RejectMembershipRequestCmd, int>, RejectMembershipRequestCmdHdlr>();
+builder.Services.AddScoped<IQueryHandler<GetMembershipRequestsQuery, IReadOnlyList<MembershipRequestDto>>, GetMembershipRequestsQueryHdlr>();
 
 // Register repositories and unit of work
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -46,6 +75,17 @@ builder.Services.AddScoped<IUserRoleAssignmentRep, UserRoleAssignmentRep>();
 builder.Services.AddScoped<IRoleRep, RoleRep>();
 builder.Services.AddScoped<ITenantRep, TenantRep>();
 builder.Services.AddScoped<IBranchRep, BranchRep>();
+builder.Services.AddScoped<IMembershipRequestRep, MembershipRequestRep>();
+builder.Services.AddScoped<IPlatformAdminAuthorizer, PlatformAdminAuthorizer>();
+builder.Services.AddScoped<IEmailSender, LoggingEmailSender>();
+builder.Services.AddHttpClient<IIdentityAdminService, KeycloakIdentityAdminService>((sp, client) =>
+{
+    var options = sp.GetRequiredService<IOptions<KeycloakAdminOptions>>().Value;
+    var baseUrl = string.IsNullOrWhiteSpace(options.BaseUrl)
+        ? "http://localhost:8080"
+        : options.BaseUrl.TrimEnd('/');
+    client.BaseAddress = new Uri(baseUrl + "/");
+});
 builder.Services.AddSingleton<ErrorCatalog>();
 builder.Services.AddSingleton<IErrorMessageResolver, JsonErrorMessageResolver>();
 builder.Services.AddSingleton<IErrorHttpStatusMapper, ErrorHttpStatusMapper>();
@@ -55,6 +95,7 @@ builder.Services.AddScoped<IDatabaseExceptionTranslator, PostgresDatabaseExcepti
 builder.Services.AddScoped<RbacReferenceDataSeeder>();
 builder.Services.AddScoped<PlatformTenantReferenceDataSeeder>();
 builder.Services.AddScoped<IReferenceDataSeeder, ReferenceDataSeeder>();
+builder.Services.AddScoped<IPlatformAdminBootstrapSeeder, PlatformAdminBootstrapSeeder>();
 
 JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
 
@@ -168,6 +209,23 @@ if (args.Contains("seed", StringComparer.OrdinalIgnoreCase))
     return;
 }
 
+if (args.Contains("bootstrap-platform-admin", StringComparer.OrdinalIgnoreCase))
+{
+    try
+    {
+        await using var scope = app.Services.CreateAsyncScope();
+        var bootstrap = scope.ServiceProvider.GetRequiredService<IPlatformAdminBootstrapSeeder>();
+        await bootstrap.BootstrapAsync();
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine(ex.Message);
+        Environment.Exit(1);
+    }
+
+    return;
+}
+
 app.Services.GetRequiredService<ErrorCatalogValidator>().Validate();
 
 // Configure the HTTP request pipeline.
@@ -214,5 +272,130 @@ app.MapGet("/users/me", async (HttpContext httpContext, IUserRep userRepository)
 .RequireAuthorization()
 .WithName("GetCurrentUser");
 
+app.MapPost("/membership-requests", async (
+    SubmitMembershipRequestRequest body,
+    ICommandDispatcher dispatcher,
+    IErrorMessageResolver messages,
+    IErrorHttpStatusMapper statuses) =>
+{
+    var result = await dispatcher.DispatchAsync<SubmitMembershipRequestCmd, int>(
+        new SubmitMembershipRequestCmd(body.CompanyName, body.Email, body.FirstName, body.LastName));
+
+    return result.IsFailure
+        ? result.Error.ToProblemResult(messages, statuses)
+        : Results.Created($"/membership-requests/{result.Value}", new { id = result.Value });
+})
+.WithName("SubmitMembershipRequest");
+
+app.MapPost("/membership-requests/confirm-email", async (
+    ConfirmMembershipRequestEmailRequest body,
+    ICommandDispatcher dispatcher,
+    IErrorMessageResolver messages,
+    IErrorHttpStatusMapper statuses) =>
+{
+    var result = await dispatcher.DispatchAsync<ConfirmMembershipRequestEmailCmd, int>(
+        new ConfirmMembershipRequestEmailCmd(body.Token));
+
+    return result.IsFailure
+        ? result.Error.ToProblemResult(messages, statuses)
+        : Results.Ok(new { id = result.Value });
+})
+.WithName("ConfirmMembershipRequestEmail");
+
+app.MapGet("/membership-requests", async (
+    MembershipRequestStatus? status,
+    HttpContext httpContext,
+    IPlatformAdminAuthorizer platformAdminAuthorizer,
+    IQueryDispatcher queryDispatcher,
+    IErrorMessageResolver messages,
+    IErrorHttpStatusMapper statuses) =>
+{
+    var auth = await EnsurePlatformAdmin(httpContext, platformAdminAuthorizer);
+    if (auth is not null)
+    {
+        return auth;
+    }
+
+    var filter = status ?? MembershipRequestStatus.PendingReview;
+    var result = await queryDispatcher.DispatchAsync<GetMembershipRequestsQuery, IReadOnlyList<MembershipRequestDto>>(
+        new GetMembershipRequestsQuery(filter));
+
+    return result.IsFailure
+        ? result.Error.ToProblemResult(messages, statuses)
+        : Results.Ok(result.Value);
+})
+.RequireAuthorization()
+.WithName("ListMembershipRequests");
+
+app.MapPost("/membership-requests/{id:int}/approve", async (
+    int id,
+    HttpContext httpContext,
+    IPlatformAdminAuthorizer platformAdminAuthorizer,
+    ICommandDispatcher dispatcher,
+    IErrorMessageResolver messages,
+    IErrorHttpStatusMapper statuses) =>
+{
+    var auth = await EnsurePlatformAdmin(httpContext, platformAdminAuthorizer);
+    if (auth is not null)
+    {
+        return auth;
+    }
+
+    var result = await dispatcher.DispatchAsync<ApproveMembershipRequestCmd, int>(
+        new ApproveMembershipRequestCmd(id));
+
+    return result.IsFailure
+        ? result.Error.ToProblemResult(messages, statuses)
+        : Results.Ok(new { id = result.Value });
+})
+.RequireAuthorization()
+.WithName("ApproveMembershipRequest");
+
+app.MapPost("/membership-requests/{id:int}/reject", async (
+    int id,
+    RejectMembershipRequestRequest? body,
+    HttpContext httpContext,
+    IPlatformAdminAuthorizer platformAdminAuthorizer,
+    ICommandDispatcher dispatcher,
+    IErrorMessageResolver messages,
+    IErrorHttpStatusMapper statuses) =>
+{
+    var auth = await EnsurePlatformAdmin(httpContext, platformAdminAuthorizer);
+    if (auth is not null)
+    {
+        return auth;
+    }
+
+    var result = await dispatcher.DispatchAsync<RejectMembershipRequestCmd, int>(
+        new RejectMembershipRequestCmd(id, body?.Reason));
+
+    return result.IsFailure
+        ? result.Error.ToProblemResult(messages, statuses)
+        : Results.Ok(new { id = result.Value });
+})
+.RequireAuthorization()
+.WithName("RejectMembershipRequest");
+
 app.Run();
+
+static async Task<IResult?> EnsurePlatformAdmin(
+    HttpContext httpContext,
+    IPlatformAdminAuthorizer platformAdminAuthorizer)
+{
+    var userIdValue = httpContext.User.FindFirstValue("talyer_user_id");
+    if (!Guid.TryParse(userIdValue, out var userId))
+    {
+        return Results.Unauthorized();
+    }
+
+    var authResult = await platformAdminAuthorizer.EnsureIsPlatformAdminAsync(userId, httpContext.RequestAborted);
+    if (authResult.IsFailure)
+    {
+        var messages = httpContext.RequestServices.GetRequiredService<IErrorMessageResolver>();
+        var statuses = httpContext.RequestServices.GetRequiredService<IErrorHttpStatusMapper>();
+        return authResult.Error.ToProblemResult(messages, statuses);
+    }
+
+    return null;
+}
 

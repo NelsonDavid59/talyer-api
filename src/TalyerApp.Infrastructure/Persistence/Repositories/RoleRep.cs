@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using TalyerApp.Application.Common.Interfaces.Repository;
 using TalyerApp.Domain.Entities;
 using TalyerApp.Domain.Shared.Result;
@@ -17,6 +18,17 @@ public class RoleRep : IRoleRep
     {
         var role = await _context.Roles.FindAsync(id, cancellationToken);
 
+        if (role is null)
+        {
+            return Result<Role>.Failure(DomainErrors.Role.RoleNotFound);
+        }
+
+        return Result<Role>.Success(role);
+    }
+
+    public async Task<Result<Role>> GetByCodeAsync(string code, CancellationToken cancellationToken = default)
+    {
+        var role = await _context.Roles.FirstOrDefaultAsync(r => r.Code == code, cancellationToken);
         if (role is null)
         {
             return Result<Role>.Failure(DomainErrors.Role.RoleNotFound);

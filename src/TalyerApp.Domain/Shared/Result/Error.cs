@@ -9,4 +9,6 @@ public sealed record Error(string Code, ErrorCategory Category) : IDomainError
     public static Error Validation(string code) => new(code, ErrorCategory.Validation);
 
     public static Error Conflict(string code) => new(code, ErrorCategory.Conflict);
+
+    public static Error Forbidden(string code) => new(code, ErrorCategory.Forbidden);
 }

@@ -15,6 +15,7 @@ public static class ErrorCodes
         public const string InvalidUsername = "User.InvalidUsername";
         public const string InvalidFirstName = "User.InvalidFirstName";
         public const string InvalidLastName = "User.InvalidLastName";
+        public const string AlreadyExists = "User.AlreadyExists";
     }
 
     public static class ExternalIdentity
@@ -51,6 +52,33 @@ public static class ErrorCodes
         public const string NotFound = "Tenant.NotFound";
         public const string InvalidDescription = "Tenant.InvalidDescription";
         public const string InvalidCode = "Tenant.InvalidCode";
+        public const string AlreadyExists = "Tenant.AlreadyExists";
+        public const string CodeGenerationFailed = "Tenant.CodeGenerationFailed";
+    }
+
+    public static class Authorization
+    {
+        public const string Forbidden = "Authorization.Forbidden";
+    }
+
+    public static class MembershipRequest
+    {
+        public const string NotFound = "MembershipRequest.NotFound";
+        public const string InvalidCompanyName = "MembershipRequest.InvalidCompanyName";
+        public const string InvalidEmail = "MembershipRequest.InvalidEmail";
+        public const string InvalidFirstName = "MembershipRequest.InvalidFirstName";
+        public const string InvalidLastName = "MembershipRequest.InvalidLastName";
+        public const string InvalidToken = "MembershipRequest.InvalidToken";
+        public const string TokenExpired = "MembershipRequest.TokenExpired";
+        public const string AlreadyExists = "MembershipRequest.AlreadyExists";
+        public const string InvalidStatus = "MembershipRequest.InvalidStatus";
+        public const string IdentityProviderError = "MembershipRequest.IdentityProviderError";
+    }
+
+    public static class IdentityAdmin
+    {
+        public const string UserAlreadyExists = "IdentityAdmin.UserAlreadyExists";
+        public const string OperationFailed = "IdentityAdmin.OperationFailed";
     }
 
     public static class Branch
