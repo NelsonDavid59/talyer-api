@@ -36,6 +36,7 @@
   "MembershipRequest.AlreadyExists": "A membership request for this email is already in progress or a user with this email already exists.",
   "MembershipRequest.InvalidStatus": "The membership request is not in a valid status for this action.",
   "MembershipRequest.IdentityProviderError": "The identity provider operation failed.",
+  "MembershipRequest.ApprovalSystemError": "Membership approval could not be completed. Try again later or contact support.",
   "IdentityAdmin.UserAlreadyExists": "A user with this email already exists in the identity provider.",
   "IdentityAdmin.OperationFailed": "The identity provider operation failed.",
   "Branch.NotFound": "Branch not found.",

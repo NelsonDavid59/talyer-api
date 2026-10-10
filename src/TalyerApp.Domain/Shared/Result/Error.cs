@@ -11,4 +11,6 @@ public sealed record Error(string Code, ErrorCategory Category) : IDomainError
     public static Error Conflict(string code) => new(code, ErrorCategory.Conflict);
 
     public static Error Forbidden(string code) => new(code, ErrorCategory.Forbidden);
+
+    public static Error System(string code) => new(code, ErrorCategory.System);
 }

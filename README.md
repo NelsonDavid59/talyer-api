@@ -182,6 +182,8 @@ Completar en `usersecrets.json` (ver `usersecrets.example.json`):
 
 En Keycloak: Clients → Create → `talyer-api-admin`, Client authentication ON, Service accounts roles → realm-management → `manage-users`.
 
+**Correo del realm (obligatorio para aprobar):** Realm settings → **Email** con **From** y SMTP configurados. La aprobacion es **atomica**: la API crea el usuario en Keycloak, envia el mail de invitacion (`UPDATE_PASSWORD`) y solo entonces persiste tenant/usuario en Talyer. Si el envio falla, se elimina el usuario en Keycloak, la solicitud sigue en `PendingReview` y la API responde **500** con un mensaje generico (el detalle de Keycloak queda en los logs del servidor).
+
 ### Endpoints
 
 Publicos (sin JWT):
@@ -197,7 +199,7 @@ Autenticados (OAuth en Scalar, usuario `platform_admin`):
 
 Probar en http://localhost:5066/talyer-app-api
 
-Si el save en Talyer falla despues de crear el usuario en Keycloak, la API intenta **borrar** ese usuario en Keycloak.
+Si falla el envio de invitacion en Keycloak o el save en Talyer despues de un envio exitoso, la API intenta **borrar** el usuario creado en Keycloak y no deja la solicitud en `Approved`.
 
 Un email = un usuario Talyer en este MVP (`Users.Email` unique). Nombre de empresa duplicado (`Tenant.Description`) rechaza la solicitud.
 

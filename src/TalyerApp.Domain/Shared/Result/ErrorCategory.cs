@@ -5,5 +5,6 @@ public enum ErrorCategory
     NotFound,
     Validation,
     Conflict,
-    Forbidden
+    Forbidden,
+    System
 }

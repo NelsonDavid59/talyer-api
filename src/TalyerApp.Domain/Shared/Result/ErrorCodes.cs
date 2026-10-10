@@ -73,6 +73,7 @@ public static class ErrorCodes
         public const string AlreadyExists = "MembershipRequest.AlreadyExists";
         public const string InvalidStatus = "MembershipRequest.InvalidStatus";
         public const string IdentityProviderError = "MembershipRequest.IdentityProviderError";
+        public const string ApprovalSystemError = "MembershipRequest.ApprovalSystemError";
     }
 
     public static class IdentityAdmin

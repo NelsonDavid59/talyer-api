@@ -23,7 +23,9 @@ public sealed class KeycloakAdminOptionsValidator : IValidateOptions<KeycloakAdm
 
         if (string.IsNullOrWhiteSpace(options.ClientSecret))
         {
-            failures.Add($"{KeycloakAdminOptions.SectionName}:ClientSecret is required.");
+            failures.Add(
+                $"{KeycloakAdminOptions.SectionName}:ClientSecret is required. " +
+                "Set a non-empty value in usersecrets.json (Development) or Keycloak__Admin__ClientSecret.");
         }
 
         if (string.IsNullOrWhiteSpace(KeycloakConnectionResolver.ResolveBaseUrl(options.BaseUrl, _shared.BaseUrl)))

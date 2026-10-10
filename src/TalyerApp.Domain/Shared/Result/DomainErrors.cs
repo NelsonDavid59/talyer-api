@@ -118,6 +118,9 @@ public static class DomainErrors
 
         public static readonly Error IdentityProviderError =
             Error.Validation(ErrorCodes.MembershipRequest.IdentityProviderError);
+
+        public static readonly Error ApprovalSystemError =
+            Error.System(ErrorCodes.MembershipRequest.ApprovalSystemError);
     }
 
     public static class IdentityAdmin

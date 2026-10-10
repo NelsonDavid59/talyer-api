@@ -156,7 +156,7 @@ public class KeycloakIdentityAdminService : IIdentityAdminService
                 providerUserId,
                 (int)response.StatusCode,
                 await response.Content.ReadAsStringAsync(cancellationToken));
-            return Result.Failure(DomainErrors.IdentityAdmin.OperationFailed);
+            return Result.Failure(DomainErrors.MembershipRequest.ApprovalSystemError);
         }
 
         return Result.Success();

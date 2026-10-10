@@ -113,6 +113,22 @@ public class ApproveMembershipRequestCmdHdlr : ICommandHandler<ApproveMembership
         }
 
         var providerUserId = createUserResult.Value;
+
+        var emailResult = await _identityAdminService.SendExecuteActionsEmailAsync(
+            providerUserId,
+            ["UPDATE_PASSWORD"],
+            cancellationToken);
+
+        if (emailResult.IsFailure)
+        {
+            await CompensateKeycloakUserAsync(providerUserId, cancellationToken);
+            _logger.LogError(
+                "Membership request {MembershipRequestId} approval rolled back: Keycloak invitation email failed for {ProviderUserId}. Request remains PendingReview.",
+                request.Id,
+                providerUserId);
+            return Result<int>.Failure(DomainErrors.MembershipRequest.ApprovalSystemError);
+        }
+
         var persisted = false;
         Result<int>? persistFailure = null;
 
@@ -183,33 +199,22 @@ public class ApproveMembershipRequestCmdHdlr : ICommandHandler<ApproveMembership
                 request.Email,
                 providerUserId);
 
-            await _identityAdminService.DeleteUserAsync(providerUserId, cancellationToken);
+            await CompensateKeycloakUserAsync(providerUserId, cancellationToken);
 
-            return persistFailure ?? Result<int>.Failure(DomainErrors.MembershipRequest.IdentityProviderError);
+            return persistFailure ?? Result<int>.Failure(DomainErrors.MembershipRequest.ApprovalSystemError);
         }
 
         if (!persisted)
         {
-            await _identityAdminService.DeleteUserAsync(providerUserId, cancellationToken);
-            return Result<int>.Failure(DomainErrors.MembershipRequest.IdentityProviderError);
-        }
-
-        var emailResult = await _identityAdminService.SendExecuteActionsEmailAsync(
-            providerUserId,
-            ["UPDATE_PASSWORD"],
-            cancellationToken);
-
-        if (emailResult.IsFailure)
-        {
-            _logger.LogError(
-                "Membership approved but Keycloak execute-actions-email failed for {Email} ({ProviderUserId}).",
-                request.Email,
-                providerUserId);
-            return Result<int>.Failure(emailResult.Error);
+            await CompensateKeycloakUserAsync(providerUserId, cancellationToken);
+            return Result<int>.Failure(DomainErrors.MembershipRequest.ApprovalSystemError);
         }
 
         return Result<int>.Success(request.Id);
     }
+
+    private Task CompensateKeycloakUserAsync(string providerUserId, CancellationToken cancellationToken) =>
+        _identityAdminService.DeleteUserAsync(providerUserId, cancellationToken);
 
     private async Task<Result<string>> AllocateTenantCodeAsync(
         string companyName,
