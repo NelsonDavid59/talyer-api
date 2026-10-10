@@ -4,11 +4,11 @@ public class KeycloakAdminOptions
 {
     public const string SectionName = "Keycloak:Admin";
 
-    public string BaseUrl { get; set; } = "http://localhost:8080";
+    public string? BaseUrl { get; set; }
 
-    public string Realm { get; set; } = "talyer-realm";
+    public string? Realm { get; set; }
 
-    public string ClientId { get; set; } = string.Empty;
+    public string? ClientId { get; set; }
 
-    public string ClientSecret { get; set; } = string.Empty;
+    public string? ClientSecret { get; set; }
 }

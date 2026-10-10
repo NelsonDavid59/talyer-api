@@ -48,6 +48,25 @@ En el entorno de desarrollo se habilitan OpenAPI y Scalar:
 - OpenAPI: http://localhost:5066/openapi/v1.json
 - Scalar: http://localhost:5066/talyer-app-api
 
+Keycloak se configura bajo `Keycloak` (`appsettings.json`, `appsettings.{Environment}.json` o `usersecrets.json`). **ValidateOnStart**: la API no arranca si falta configuracion obligatoria. `BaseUrl` y `Realm` se definen una vez en la raiz (`Keycloak:BaseUrl`, `Keycloak:Realm`) y aplican a JWT y al cliente Admin HTTP, salvo override en `Keycloak:Api` o `Keycloak:Admin`.
+
+| Clave | Obligatorio | Descripcion |
+|-------|-------------|-------------|
+| `Keycloak__BaseUrl` | Si | URL base del servidor Keycloak (p. ej. `http://localhost:8080`) |
+| `Keycloak__Realm` | Si | Nombre del realm (p. ej. `talyer-realm`) |
+| `Keycloak__Api__Audience` | Si | Audiencia del resource server |
+| `Keycloak__Api__RequireHttpsMetadata` | Si | `true` o `false` explicito (`false` en Development, `true` en Production via `appsettings.Production.json`) |
+| `Keycloak__Api__Authority` | Condicional | Authority JWT; si no se define, se usa `{BaseUrl}/realms/{Realm}` (raiz o override en Api) |
+| `Keycloak__Api__BaseUrl` | No | Override opcional de `Keycloak:BaseUrl` solo para JWT |
+| `Keycloak__Api__Realm` | No | Override opcional de `Keycloak:Realm` solo para JWT |
+| `Keycloak__Admin__ClientId` | Si | Client confidential de servicio (`talyer-api-admin`) |
+| `Keycloak__Admin__ClientSecret` | Si | Secret del client Admin (solo `usersecrets` / variables de entorno, no commitear) |
+| `Keycloak__Admin__BaseUrl` | No | Override opcional de `Keycloak:BaseUrl` solo para Admin API |
+| `Keycloak__Admin__Realm` | No | Override opcional de `Keycloak:Realm` solo para Admin API |
+| `Keycloak__Docs__ScalarRoute` | Si | Ruta de Scalar (debe empezar con `/`) |
+| `Keycloak__Docs__OAuthClientId` | Si | Client publico para la documentacion |
+| `Keycloak__Docs__OAuthScopes` | Si | Al menos un scope (p. ej. `openid`, `profile`, `email`) |
+
 Tambien se puede ejecutar directamente el perfil HTTPS:
 
 ```bash
