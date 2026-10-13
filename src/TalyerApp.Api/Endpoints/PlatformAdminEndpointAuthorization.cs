@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using TalyerApp.Application.Common.Authorization;
+using TalyerApp.Domain.Authorization;
 using TalyerApp.Application.Common.Interfaces.Localization;
 using TalyerApp.Api.Extensions;
 
@@ -11,7 +12,7 @@ internal static class PlatformAdminEndpointAuthorization
         HttpContext httpContext,
         IPlatformAdminAuthorizer platformAdminAuthorizer)
     {
-        var userIdValue = httpContext.User.FindFirstValue("talyer_user_id");
+        var userIdValue = httpContext.User.FindFirstValue(TalyerClaimTypes.UserId);
         if (!Guid.TryParse(userIdValue, out var userId))
         {
             return Results.Unauthorized();

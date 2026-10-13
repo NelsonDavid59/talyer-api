@@ -6,6 +6,7 @@ using TalyerApp.Application.Common.Interfaces.Localization;
 using TalyerApp.Application.Features.ExternalIdentities;
 using TalyerApp.Application.Interfaces;
 using TalyerApp.Api.Configuration;
+using TalyerApp.Domain.Authorization;
 
 namespace TalyerApp.Api.DependencyInjection;
 
@@ -72,7 +73,7 @@ public static class AuthenticationServiceCollectionExtensions
 
                         principal!.AddIdentity(new ClaimsIdentity(
                         [
-                            new Claim("talyer_user_id", result.Value.ToString())
+                            new Claim(TalyerClaimTypes.UserId, result.Value.ToString())
                         ]));
                     }
                 };
