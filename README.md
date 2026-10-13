@@ -93,7 +93,7 @@ dotnet ef database update \
   --startup-project src/TalyerApp.Api/TalyerApp.Api.csproj
 ```
 
-> La cadena de conexion y la configuracion de PostgreSQL deben definirse antes de ejecutar migraciones o actualizar la base de datos.
+> La cadena de conexion (`ConnectionStrings:DefaultConnection`) no se commitea. En Development va en `usersecrets.json` (ver `usersecrets.example.json`). En Production usar `ConnectionStrings__DefaultConnection`. Definirla antes de migraciones o `dotnet run`.
 
 ## Datos de referencia (seed)
 
@@ -126,7 +126,7 @@ Crea en la base de datos el primer usuario operativo con rol `platform_admin` en
 cp src/TalyerApp.Api/usersecrets.example.json src/TalyerApp.Api/usersecrets.json
 ```
 
-2. Completar `Bootstrap:PlatformAdmin` en `usersecrets.json`. El campo `ProviderUserId` debe ser el **ID de usuario** de Keycloak (claim `sub` del JWT). En la consola de administracion: realm → Users → usuario → campo **ID**.
+2. Completar `ConnectionStrings:DefaultConnection` y `Bootstrap:PlatformAdmin` en `usersecrets.json`. El campo `ProviderUserId` debe ser el **ID de usuario** de Keycloak (claim `sub` del JWT). En la consola de administracion: realm → Users → usuario → campo **ID**.
 
 3. Los demas campos deben coincidir con el perfil y los claims del token (`email`, `preferred_username`, `given_name`, `family_name`).
 
@@ -144,6 +144,7 @@ No se carga `usersecrets.json`. Definir variables de entorno en el host o conten
 
 | Variable | Obligatorio | Descripcion |
 |----------|-------------|-------------|
+| `ConnectionStrings__DefaultConnection` | Si | Cadena PostgreSQL (incluye password) |
 | `Bootstrap__PlatformAdmin__ProviderUserId` | Si | UUID `sub` de Keycloak |
 | `Bootstrap__PlatformAdmin__Email` | Si | Claim `email` |
 | `Bootstrap__PlatformAdmin__Username` | Si | Claim `preferred_username` |
@@ -156,6 +157,7 @@ Ejemplo en Docker Compose:
 ```yaml
 environment:
   ASPNETCORE_ENVIRONMENT: Production
+  ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=talyer;Username=postgres;Password=<secret>"
   Bootstrap__PlatformAdmin__ProviderUserId: "<sub-keycloak>"
   Bootstrap__PlatformAdmin__Email: "admin@example.com"
   Bootstrap__PlatformAdmin__Username: "platform.admin"
@@ -177,6 +179,7 @@ Cualquiera puede solicitar membresia (demo / MVP, sin pago). El filtro es la apr
 
 Completar en `usersecrets.json` (ver `usersecrets.example.json`):
 
+- `ConnectionStrings:DefaultConnection`: PostgreSQL local (el password no va en `appsettings.json`).
 - `Keycloak:Admin`: client confidential de servicio (`talyer-api-admin`) con `manage-users` en el realm `talyer-realm`.
 - `Membership:ConfirmEmailBaseUrl`: origen de la API o del front (el mail de verificacion Talyer se **loguea** en consola; no hay SMTP en este MVP).
 
