@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <Content Update="Resources\Errors\*.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Update="Resources\Emails\*.html" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

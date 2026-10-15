@@ -87,7 +87,7 @@ public class ApproveMembershipRequestCmdHdlr : ICommandHandler<ApproveMembership
             return Result<int>.Failure(tenantResult.Error);
         }
 
-        var roleResult = await _roleRepository.GetByCodeAsync(RoleCodes.TenantAdmin, cancellationToken);
+        var roleResult = await _roleRepository.GetByCodeAsync(RoleCodes.TenantOwner, cancellationToken);
         if (roleResult.IsFailure)
         {
             return Result<int>.Failure(roleResult.Error);
@@ -166,7 +166,7 @@ public class ApproveMembershipRequestCmdHdlr : ICommandHandler<ApproveMembership
                 }
 
                 if (!RoleTenantAssignmentRules.IsAllowed(
-                        RoleCodes.TenantAdmin,
+                        RoleCodes.TenantOwner,
                         tenantResult.Value.Type,
                         branchId: null))
                 {

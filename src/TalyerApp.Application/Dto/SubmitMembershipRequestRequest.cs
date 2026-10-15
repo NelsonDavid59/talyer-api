@@ -6,6 +6,4 @@ public sealed record SubmitMembershipRequestRequest(
     string FirstName,
     string LastName);
 
-public sealed record ConfirmMembershipRequestEmailRequest(string Token);
-
 public sealed record RejectMembershipRequestRequest(string? Reason);

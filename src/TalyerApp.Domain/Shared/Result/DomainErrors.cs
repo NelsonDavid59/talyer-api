@@ -121,6 +121,12 @@ public static class DomainErrors
 
         public static readonly Error ApprovalSystemError =
             Error.System(ErrorCodes.MembershipRequest.ApprovalSystemError);
+
+        public static readonly Error EmailDeliveryFailed =
+            Error.System(ErrorCodes.MembershipRequest.EmailDeliveryFailed);
+
+        public static readonly Error ConfirmationEmailFailed =
+            Error.System(ErrorCodes.MembershipRequest.ConfirmationEmailFailed);
     }
 
     public static class IdentityAdmin

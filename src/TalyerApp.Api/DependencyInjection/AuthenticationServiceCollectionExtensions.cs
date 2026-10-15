@@ -3,6 +3,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
 using TalyerApp.Application.Common.Interfaces.Localization;
+using TalyerApp.Application.Common.Interfaces.Repository;
 using TalyerApp.Application.Features.ExternalIdentities;
 using TalyerApp.Application.Interfaces;
 using TalyerApp.Api.Configuration;
@@ -71,10 +72,23 @@ public static class AuthenticationServiceCollectionExtensions
                             return;
                         }
 
+                        var assignmentRep = context.HttpContext.RequestServices
+                            .GetRequiredService<IUserRoleAssignmentRep>();
+                        var assignments = await assignmentRep.GetByUserIdAsync(
+                            result.Value,
+                            context.HttpContext.RequestAborted);
+
+                        var claims = new List<Claim>
+                        {
+                            new(TalyerClaimTypes.UserId, result.Value.ToString())
+                        };
+                        claims.AddRange(assignments.Select(a => new Claim(ClaimTypes.Role, a.Role.Code)));
+
                         principal!.AddIdentity(new ClaimsIdentity(
-                        [
-                            new Claim(TalyerClaimTypes.UserId, result.Value.ToString())
-                        ]));
+                            claims,
+                            authenticationType: "Talyer",
+                            nameType: ClaimTypes.Name,
+                            roleType: ClaimTypes.Role));
                     }
                 };
             });
@@ -83,7 +97,12 @@ public static class AuthenticationServiceCollectionExtensions
             .Configure<IOptions<KeycloakApiOptions>, IOptions<KeycloakSharedOptions>>((jwt, apiOptions, sharedOptions) =>
                 ConfigureJwtBearerOptions.Apply(jwt, apiOptions.Value, sharedOptions.Value));
 
-        services.AddAuthorization();
+        services.AddAuthorization(options =>
+        {
+            options.AddPolicy(
+                AuthorizationPolicies.PlatformOwner,
+                policy => policy.RequireRole(RoleCodes.PlatformOwner));
+        });
 
         return services;
     }

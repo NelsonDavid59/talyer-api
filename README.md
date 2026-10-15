@@ -66,6 +66,12 @@ Keycloak se configura bajo `Keycloak` (`appsettings.json`, `appsettings.{Environ
 | `Keycloak__Docs__ScalarRoute` | Si | Ruta de Scalar (debe empezar con `/`) |
 | `Keycloak__Docs__OAuthClientId` | Si | Client publico para la documentacion |
 | `Keycloak__Docs__OAuthScopes` | Si | Al menos un scope (p. ej. `openid`, `profile`, `email`) |
+| `Smtp__Host` | Si | Host SMTP |
+| `Smtp__Port` | Si | Puerto SMTP (p. ej. 587) |
+| `Smtp__User` | Si | Usuario SMTP |
+| `Smtp__Password` | Si | Password SMTP (solo `usersecrets` / variables de entorno) |
+| `Smtp__From` | Si | Remitente (p. ej. `noreply@example.com`) |
+| `Smtp__UseSsl` | Si | `true` = STARTTLS |
 
 Tambien se puede ejecutar directamente el perfil HTTPS:
 
@@ -114,7 +120,7 @@ Orden recomendado en un entorno nuevo:
 
 ## Bootstrap platform admin
 
-Crea en la base de datos el primer usuario operativo con rol `platform_admin` en el tenant `platform`, enlazado al usuario de Keycloak mediante `ExternalIdentity` (`provider` + `sub`).
+Crea en la base de datos el primer usuario operativo con rol `platform_owner` en el tenant `platform`, enlazado al usuario de Keycloak mediante `ExternalIdentity` (`provider` + `sub`).
 
 **Prerrequisitos:** usuario ya creado en Keycloak; migraciones aplicadas; `seed` ejecutado.
 
@@ -126,17 +132,17 @@ Crea en la base de datos el primer usuario operativo con rol `platform_admin` en
 cp src/TalyerApp.Api/usersecrets.example.json src/TalyerApp.Api/usersecrets.json
 ```
 
-2. Completar `ConnectionStrings:DefaultConnection` y `Bootstrap:PlatformAdmin` en `usersecrets.json`. El campo `ProviderUserId` debe ser el **ID de usuario** de Keycloak (claim `sub` del JWT). En la consola de administracion: realm → Users → usuario → campo **ID**.
+2. Completar `ConnectionStrings:DefaultConnection` y `Bootstrap:PlatformOwner` en `usersecrets.json`. El campo `ProviderUserId` debe ser el **ID de usuario** de Keycloak (claim `sub` del JWT). En la consola de administracion: realm → Users → usuario → campo **ID**.
 
 3. Los demas campos deben coincidir con el perfil y los claims del token (`email`, `preferred_username`, `given_name`, `family_name`).
 
 4. Ejecutar (con `ASPNETCORE_ENVIRONMENT=Development`, p. ej. perfil por defecto de `launchSettings.json`):
 
 ```bash
-dotnet run --project src/TalyerApp.Api/TalyerApp.Api.csproj -- bootstrap-platform-admin
+dotnet run --project src/TalyerApp.Api/TalyerApp.Api.csproj -- bootstrap-platform-owner
 ```
 
-Las variables de entorno `Bootstrap__PlatformAdmin__*` tienen prioridad sobre `usersecrets.json` si ambas estan definidas.
+Las variables de entorno `Bootstrap__PlatformOwner__*` tienen prioridad sobre `usersecrets.json` si ambas estan definidas.
 
 ### Production
 
@@ -145,12 +151,12 @@ No se carga `usersecrets.json`. Definir variables de entorno en el host o conten
 | Variable | Obligatorio | Descripcion |
 |----------|-------------|-------------|
 | `ConnectionStrings__DefaultConnection` | Si | Cadena PostgreSQL (incluye password) |
-| `Bootstrap__PlatformAdmin__ProviderUserId` | Si | UUID `sub` de Keycloak |
-| `Bootstrap__PlatformAdmin__Email` | Si | Claim `email` |
-| `Bootstrap__PlatformAdmin__Username` | Si | Claim `preferred_username` |
-| `Bootstrap__PlatformAdmin__FirstName` | Si | Claim `given_name` |
-| `Bootstrap__PlatformAdmin__LastName` | Si | Claim `family_name` |
-| `Bootstrap__PlatformAdmin__Provider` | No | Default: `keycloak` |
+| `Bootstrap__PlatformOwner__ProviderUserId` | Si | UUID `sub` de Keycloak |
+| `Bootstrap__PlatformOwner__Email` | Si | Claim `email` |
+| `Bootstrap__PlatformOwner__Username` | Si | Claim `preferred_username` |
+| `Bootstrap__PlatformOwner__FirstName` | Si | Claim `given_name` |
+| `Bootstrap__PlatformOwner__LastName` | Si | Claim `family_name` |
+| `Bootstrap__PlatformOwner__Provider` | Si | IdP (`keycloak`, etc.) |
 
 Ejemplo en Docker Compose:
 
@@ -158,11 +164,12 @@ Ejemplo en Docker Compose:
 environment:
   ASPNETCORE_ENVIRONMENT: Production
   ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=talyer;Username=postgres;Password=<secret>"
-  Bootstrap__PlatformAdmin__ProviderUserId: "<sub-keycloak>"
-  Bootstrap__PlatformAdmin__Email: "admin@example.com"
-  Bootstrap__PlatformAdmin__Username: "platform.admin"
-  Bootstrap__PlatformAdmin__FirstName: "Platform"
-  Bootstrap__PlatformAdmin__LastName: "Admin"
+  Bootstrap__PlatformOwner__Provider: "keycloak"
+  Bootstrap__PlatformOwner__ProviderUserId: "<sub-keycloak>"
+  Bootstrap__PlatformOwner__Email: "admin@example.com"
+  Bootstrap__PlatformOwner__Username: "platform.admin"
+  Bootstrap__PlatformOwner__FirstName: "Platform"
+  Bootstrap__PlatformOwner__LastName: "Admin"
 ```
 
 Ejecutar el mismo comando bootstrap en el job o contenedor de inicializacion acordado.
@@ -171,9 +178,9 @@ El comando es idempotente: puede ejecutarse de nuevo sin duplicar usuario ni asi
 
 ## Solicitud de membresia e invitacion
 
-Flujo de alta de un taller (tenant `CUSTOMER` + `tenant_admin`). El formulario **no** crea usuario en Keycloak. El `platform_admin` aprueba y ahi se crea la cuenta en el IdP (la invitacion **es** el registro: el interesado define contrasena con el mail de Keycloak).
+Flujo de alta de un taller (tenant `CUSTOMER` + `tenant_owner`). El formulario **no** crea usuario en Keycloak. El `platform_owner` aprueba y ahi se crea la cuenta en el IdP (la invitacion **es** el registro: el interesado define contrasena con el mail de Keycloak).
 
-Cualquiera puede solicitar membresia (demo / MVP, sin pago). El filtro es la aprobacion del `platform_admin`.
+Cualquiera puede solicitar membresia (demo / MVP, sin pago). El filtro es la aprobacion del `platform_owner`.
 
 ### Development
 
@@ -181,7 +188,10 @@ Completar en `usersecrets.json` (ver `usersecrets.example.json`):
 
 - `ConnectionStrings:DefaultConnection`: PostgreSQL local (el password no va en `appsettings.json`).
 - `Keycloak:Admin`: client confidential de servicio (`talyer-api-admin`) con `manage-users` en el realm `talyer-realm`.
-- `Membership:ConfirmEmailBaseUrl`: origen de la API o del front (el mail de verificacion Talyer se **loguea** en consola; no hay SMTP en este MVP).
+- `Membership:ConfirmEmailBaseUrl`: origen de la API (el link del mail apunta a `GET /membership-requests/confirm-email?token=`).
+- `Smtp`: `Host`, `Port`, `User`, `Password`, `From`, `UseSsl` (obligatorio; secretos en `usersecrets.json`).
+
+Cuerpos HTML editables en `src/TalyerApp.Api/Resources/Emails/` (`confirm-request.html`, `email-confirmed.html`, paginas de resultado). Placeholders: `{{ConfirmUrl}}`, `{{FirstName}}`, `{{LastName}}`, `{{CompanyName}}`, `{{Message}}`, `{{LifetimeHours}}`.
 
 En Keycloak: Clients → Create → `talyer-api-admin`, Client authentication ON, Service accounts roles → realm-management → `manage-users`.
 
@@ -191,10 +201,10 @@ En Keycloak: Clients → Create → `talyer-api-admin`, Client authentication ON
 
 Publicos (sin JWT):
 
-- `POST /membership-requests`
-- `POST /membership-requests/confirm-email` body `{ "token": "..." }` (el token sale en el log de la API)
+- `POST /membership-requests` (envia mail HTML con el link de confirmacion; si SMTP falla responde **500** `MembershipRequest.EmailDeliveryFailed` y la solicitud queda `PendingEmailVerification`)
+- `GET /membership-requests/confirm-email?token=...` (un clic; respuesta HTML). Confirma y envia el mail de exito en la misma transaccion. Si el mail de exito falla: rollback (`PendingEmailVerification`), **500** HTML, detalle en logs; el mismo link se puede reintentar.
 
-Autenticados (OAuth en Scalar, usuario `platform_admin`):
+Autenticados (OAuth en Scalar, usuario `platform_owner`):
 
 - `GET /membership-requests?status=PendingReview`
 - `POST /membership-requests/{id}/approve`

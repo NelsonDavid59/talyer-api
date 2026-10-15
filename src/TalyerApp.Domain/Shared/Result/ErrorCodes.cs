@@ -74,6 +74,8 @@ public static class ErrorCodes
         public const string InvalidStatus = "MembershipRequest.InvalidStatus";
         public const string IdentityProviderError = "MembershipRequest.IdentityProviderError";
         public const string ApprovalSystemError = "MembershipRequest.ApprovalSystemError";
+        public const string EmailDeliveryFailed = "MembershipRequest.EmailDeliveryFailed";
+        public const string ConfirmationEmailFailed = "MembershipRequest.ConfirmationEmailFailed";
     }
 
     public static class IdentityAdmin

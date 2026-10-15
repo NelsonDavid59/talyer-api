@@ -11,5 +11,9 @@ public interface IUserRoleAssignmentRep
         int? branchId,
         CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<UserRoleAssignment>> GetByUserIdAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default);
+
     void Add(UserRoleAssignment assignment);
 }

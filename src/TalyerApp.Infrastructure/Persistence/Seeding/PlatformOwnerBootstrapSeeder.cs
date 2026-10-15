@@ -12,22 +12,22 @@ using TalyerApp.Domain.Shared.Result;
 
 namespace TalyerApp.Infrastructure.Persistence.Seeding;
 
-public class PlatformAdminBootstrapSeeder : IPlatformAdminBootstrapSeeder
+public class PlatformOwnerBootstrapSeeder : IPlatformOwnerBootstrapSeeder
 {
     private readonly ApplicationDbContext _context;
     private readonly ICommandDispatcher _commandDispatcher;
     private readonly IUserRoleAssignmentRep _userRoleAssignmentRepository;
-    private readonly PlatformAdminBootstrapOptions _options;
+    private readonly PlatformOwnerBootstrapOptions _options;
     private readonly IHostEnvironment _hostEnvironment;
-    private readonly ILogger<PlatformAdminBootstrapSeeder> _logger;
+    private readonly ILogger<PlatformOwnerBootstrapSeeder> _logger;
 
-    public PlatformAdminBootstrapSeeder(
+    public PlatformOwnerBootstrapSeeder(
         ApplicationDbContext context,
         ICommandDispatcher commandDispatcher,
         IUserRoleAssignmentRep userRoleAssignmentRepository,
-        IOptions<PlatformAdminBootstrapOptions> options,
+        IOptions<PlatformOwnerBootstrapOptions> options,
         IHostEnvironment hostEnvironment,
-        ILogger<PlatformAdminBootstrapSeeder> logger)
+        ILogger<PlatformOwnerBootstrapSeeder> logger)
     {
         _context = context;
         _commandDispatcher = commandDispatcher;
@@ -43,9 +43,7 @@ public class PlatformAdminBootstrapSeeder : IPlatformAdminBootstrapSeeder
 
         await EnsureReferenceDataExistsAsync(cancellationToken);
 
-        var provider = string.IsNullOrWhiteSpace(_options.Provider)
-            ? "keycloak"
-            : _options.Provider.Trim();
+        var provider = _options.Provider.Trim();
 
         var registerResult = await _commandDispatcher.DispatchAsync<RegisterExternalIdentityCmd, Guid>(
             new RegisterExternalIdentityCmd(
@@ -60,19 +58,19 @@ public class PlatformAdminBootstrapSeeder : IPlatformAdminBootstrapSeeder
         if (registerResult.IsFailure)
         {
             throw new InvalidOperationException(
-                $"Failed to register platform admin external identity ({registerResult.Error.Code}).");
+                $"Failed to register platform owner external identity ({registerResult.Error.Code}).");
         }
 
         var userId = registerResult.Value;
         _logger.LogInformation(
-            "Platform admin user linked. UserId: {UserId}, Provider: {Provider}, ProviderUserId: {ProviderUserId}",
+            "Platform owner user linked. UserId: {UserId}, Provider: {Provider}, ProviderUserId: {ProviderUserId}",
             userId,
             provider,
             _options.ProviderUserId);
 
         var role = await _context.Roles
             .AsNoTracking()
-            .SingleAsync(r => r.Code == RoleCodes.PlatformAdmin, cancellationToken);
+            .SingleAsync(r => r.Code == RoleCodes.PlatformOwner, cancellationToken);
 
         var tenant = await _context.Tenants
             .AsNoTracking()
@@ -88,7 +86,7 @@ public class PlatformAdminBootstrapSeeder : IPlatformAdminBootstrapSeeder
         if (assignmentExists)
         {
             _logger.LogInformation(
-                "Platform admin role assignment already exists for UserId {UserId} on tenant '{TenantCode}'.",
+                "Platform owner role assignment already exists for UserId {UserId} on tenant '{TenantCode}'.",
                 userId,
                 PlatformTenantCatalog.Code);
             return;
@@ -101,7 +99,7 @@ public class PlatformAdminBootstrapSeeder : IPlatformAdminBootstrapSeeder
         if (assignResult.IsSuccess)
         {
             _logger.LogInformation(
-                "Platform admin role assigned. UserRoleAssignmentId: {AssignmentId}, UserId: {UserId}, TenantCode: {TenantCode}",
+                "Platform owner role assigned. UserRoleAssignmentId: {AssignmentId}, UserId: {UserId}, TenantCode: {TenantCode}",
                 assignResult.Value,
                 userId,
                 PlatformTenantCatalog.Code);
@@ -111,43 +109,48 @@ public class PlatformAdminBootstrapSeeder : IPlatformAdminBootstrapSeeder
         if (assignResult.Error.Code == ErrorCodes.UserRoleAssignment.AlreadyExists)
         {
             _logger.LogInformation(
-                "Platform admin role assignment already exists for UserId {UserId} on tenant '{TenantCode}'.",
+                "Platform owner role assignment already exists for UserId {UserId} on tenant '{TenantCode}'.",
                 userId,
                 PlatformTenantCatalog.Code);
             return;
         }
 
         throw new InvalidOperationException(
-            $"Failed to assign platform admin role ({assignResult.Error.Code}).");
+            $"Failed to assign platform owner role ({assignResult.Error.Code}).");
     }
 
     private void ValidateOptions()
     {
         var missing = new List<string>();
 
+        if (string.IsNullOrWhiteSpace(_options.Provider))
+        {
+            missing.Add(nameof(PlatformOwnerBootstrapOptions.Provider));
+        }
+
         if (string.IsNullOrWhiteSpace(_options.ProviderUserId))
         {
-            missing.Add(nameof(PlatformAdminBootstrapOptions.ProviderUserId));
+            missing.Add(nameof(PlatformOwnerBootstrapOptions.ProviderUserId));
         }
 
         if (string.IsNullOrWhiteSpace(_options.Email))
         {
-            missing.Add(nameof(PlatformAdminBootstrapOptions.Email));
+            missing.Add(nameof(PlatformOwnerBootstrapOptions.Email));
         }
 
         if (string.IsNullOrWhiteSpace(_options.Username))
         {
-            missing.Add(nameof(PlatformAdminBootstrapOptions.Username));
+            missing.Add(nameof(PlatformOwnerBootstrapOptions.Username));
         }
 
         if (string.IsNullOrWhiteSpace(_options.FirstName))
         {
-            missing.Add(nameof(PlatformAdminBootstrapOptions.FirstName));
+            missing.Add(nameof(PlatformOwnerBootstrapOptions.FirstName));
         }
 
         if (string.IsNullOrWhiteSpace(_options.LastName))
         {
-            missing.Add(nameof(PlatformAdminBootstrapOptions.LastName));
+            missing.Add(nameof(PlatformOwnerBootstrapOptions.LastName));
         }
 
         if (missing.Count == 0)
@@ -157,17 +160,17 @@ public class PlatformAdminBootstrapSeeder : IPlatformAdminBootstrapSeeder
 
         var missingList = string.Join(", ", missing);
         var hint = _hostEnvironment.IsDevelopment()
-            ? "Copy src/TalyerApp.Api/usersecrets.example.json to usersecrets.json and set Bootstrap:PlatformAdmin values."
-            : "Set environment variables Bootstrap__PlatformAdmin__* (e.g. Bootstrap__PlatformAdmin__ProviderUserId).";
+            ? "Copy src/TalyerApp.Api/usersecrets.example.json to usersecrets.json and set Bootstrap:PlatformOwner values."
+            : "Set environment variables Bootstrap__PlatformOwner__* (e.g. Bootstrap__PlatformOwner__ProviderUserId).";
 
         throw new InvalidOperationException(
-            $"Platform admin bootstrap configuration is incomplete. Missing: {missingList}. {hint}");
+            $"Platform owner bootstrap configuration is incomplete. Missing: {missingList}. {hint}");
     }
 
     private async Task EnsureReferenceDataExistsAsync(CancellationToken cancellationToken)
     {
         var roleExists = await _context.Roles
-            .AnyAsync(r => r.Code == RoleCodes.PlatformAdmin, cancellationToken);
+            .AnyAsync(r => r.Code == RoleCodes.PlatformOwner, cancellationToken);
 
         var tenantExists = await _context.Tenants
             .AnyAsync(t => t.Code == PlatformTenantCatalog.Code, cancellationToken);

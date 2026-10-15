@@ -31,7 +31,8 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IBranchRep, BranchRep>();
         services.AddScoped<IMembershipRequestRep, MembershipRequestRep>();
 
-        services.AddScoped<IEmailSender, LoggingEmailSender>();
+        services.AddSingleton<IEmailTemplateRenderer, FileEmailTemplateRenderer>();
+        services.AddScoped<IEmailSender, SmtpEmailSender>();
         services.AddHttpClient<IIdentityAdminService, KeycloakIdentityAdminService>((sp, client) =>
         {
             var adminOptions = sp.GetRequiredService<IOptions<KeycloakAdminOptions>>().Value;
@@ -48,7 +49,7 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<RbacReferenceDataSeeder>();
         services.AddScoped<PlatformTenantReferenceDataSeeder>();
         services.AddScoped<IReferenceDataSeeder, ReferenceDataSeeder>();
-        services.AddScoped<IPlatformAdminBootstrapSeeder, PlatformAdminBootstrapSeeder>();
+        services.AddScoped<IPlatformOwnerBootstrapSeeder, PlatformOwnerBootstrapSeeder>();
 
         return services;
     }

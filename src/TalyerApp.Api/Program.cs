@@ -23,6 +23,7 @@ if (await app.TryRunCliCommandsAsync(args))
 }
 
 app.Services.GetRequiredService<ErrorCatalogValidator>().Validate();
+app.Services.GetRequiredService<EmailTemplateValidator>().Validate();
 
 app.MapTalyerDevelopmentApiDocs();
 app.UseTalyerPipeline();

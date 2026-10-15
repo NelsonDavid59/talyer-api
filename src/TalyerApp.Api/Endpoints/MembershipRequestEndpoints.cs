@@ -1,10 +1,11 @@
-using TalyerApp.Application.Common.Authorization;
 using TalyerApp.Application.Common.Interfaces.CQRS;
 using TalyerApp.Application.Common.Interfaces.Localization;
+using TalyerApp.Application.Common.Interfaces.Notifications;
 using TalyerApp.Application.Dto;
 using TalyerApp.Application.Features.MembershipRequests;
 using TalyerApp.Application.Interfaces;
 using TalyerApp.Api.Extensions;
+using TalyerApp.Domain.Authorization;
 using TalyerApp.Domain.Shared.Membership;
 
 namespace TalyerApp.Api.Endpoints;
@@ -28,37 +29,26 @@ public static class MembershipRequestEndpoints
         })
         .WithName("SubmitMembershipRequest");
 
-        app.MapPost("/membership-requests/confirm-email", async (
-            ConfirmMembershipRequestEmailRequest body,
+        app.MapGet("/membership-requests/confirm-email", async (
+            string? token,
             ICommandDispatcher dispatcher,
+            IEmailTemplateRenderer templates,
             IErrorMessageResolver messages,
             IErrorHttpStatusMapper statuses) =>
         {
             var result = await dispatcher.DispatchAsync<ConfirmMembershipRequestEmailCmd, int>(
-                new ConfirmMembershipRequestEmailCmd(body.Token));
+                new ConfirmMembershipRequestEmailCmd(token ?? string.Empty));
 
-            return result.IsFailure
-                ? result.Error.ToProblemResult(messages, statuses)
-                : Results.Ok(new { id = result.Value });
+            return ConfirmEmailHtmlResult.From(result, templates, messages, statuses);
         })
         .WithName("ConfirmMembershipRequestEmail");
 
         app.MapGet("/membership-requests", async (
             MembershipRequestStatus? status,
-            HttpContext httpContext,
-            IPlatformAdminAuthorizer platformAdminAuthorizer,
             IQueryDispatcher queryDispatcher,
             IErrorMessageResolver messages,
             IErrorHttpStatusMapper statuses) =>
         {
-            var auth = await PlatformAdminEndpointAuthorization.EnsurePlatformAdminAsync(
-                httpContext,
-                platformAdminAuthorizer);
-            if (auth is not null)
-            {
-                return auth;
-            }
-
             var filter = status ?? MembershipRequestStatus.PendingReview;
             var result = await queryDispatcher.DispatchAsync<GetMembershipRequestsQuery, IReadOnlyList<MembershipRequestDto>>(
                 new GetMembershipRequestsQuery(filter));
@@ -67,25 +57,15 @@ public static class MembershipRequestEndpoints
                 ? result.Error.ToProblemResult(messages, statuses)
                 : Results.Ok(result.Value);
         })
-        .RequireAuthorization()
+        .RequireAuthorization(AuthorizationPolicies.PlatformOwner)
         .WithName("ListMembershipRequests");
 
         app.MapPost("/membership-requests/{id:int}/approve", async (
             int id,
-            HttpContext httpContext,
-            IPlatformAdminAuthorizer platformAdminAuthorizer,
             ICommandDispatcher dispatcher,
             IErrorMessageResolver messages,
             IErrorHttpStatusMapper statuses) =>
         {
-            var auth = await PlatformAdminEndpointAuthorization.EnsurePlatformAdminAsync(
-                httpContext,
-                platformAdminAuthorizer);
-            if (auth is not null)
-            {
-                return auth;
-            }
-
             var result = await dispatcher.DispatchAsync<ApproveMembershipRequestCmd, int>(
                 new ApproveMembershipRequestCmd(id));
 
@@ -93,26 +73,16 @@ public static class MembershipRequestEndpoints
                 ? result.Error.ToProblemResult(messages, statuses)
                 : Results.Ok(new { id = result.Value });
         })
-        .RequireAuthorization()
+        .RequireAuthorization(AuthorizationPolicies.PlatformOwner)
         .WithName("ApproveMembershipRequest");
 
         app.MapPost("/membership-requests/{id:int}/reject", async (
             int id,
             RejectMembershipRequestRequest? body,
-            HttpContext httpContext,
-            IPlatformAdminAuthorizer platformAdminAuthorizer,
             ICommandDispatcher dispatcher,
             IErrorMessageResolver messages,
             IErrorHttpStatusMapper statuses) =>
         {
-            var auth = await PlatformAdminEndpointAuthorization.EnsurePlatformAdminAsync(
-                httpContext,
-                platformAdminAuthorizer);
-            if (auth is not null)
-            {
-                return auth;
-            }
-
             var result = await dispatcher.DispatchAsync<RejectMembershipRequestCmd, int>(
                 new RejectMembershipRequestCmd(id, body?.Reason));
 
@@ -120,7 +90,7 @@ public static class MembershipRequestEndpoints
                 ? result.Error.ToProblemResult(messages, statuses)
                 : Results.Ok(new { id = result.Value });
         })
-        .RequireAuthorization()
+        .RequireAuthorization(AuthorizationPolicies.PlatformOwner)
         .WithName("RejectMembershipRequest");
 
         return app;

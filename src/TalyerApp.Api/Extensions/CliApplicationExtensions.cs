@@ -14,12 +14,12 @@ public static class CliApplicationExtensions
             return true;
         }
 
-        if (args.Contains("bootstrap-platform-admin", StringComparer.OrdinalIgnoreCase))
+        if (args.Contains("bootstrap-platform-owner", StringComparer.OrdinalIgnoreCase))
         {
             try
             {
                 await using var scope = app.Services.CreateAsyncScope();
-                var bootstrap = scope.ServiceProvider.GetRequiredService<IPlatformAdminBootstrapSeeder>();
+                var bootstrap = scope.ServiceProvider.GetRequiredService<IPlatformOwnerBootstrapSeeder>();
                 await bootstrap.BootstrapAsync();
             }
             catch (Exception ex)

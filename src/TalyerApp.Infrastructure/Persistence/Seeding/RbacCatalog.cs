@@ -18,8 +18,8 @@ public static class RbacCatalog
 
     public static IReadOnlyList<RoleDefinition> Roles =>
     [
-        new(RoleCodes.PlatformAdmin, "Platform Administrator"),
-        new(RoleCodes.TenantAdmin, "Tenant Administrator"),
+        new(RoleCodes.PlatformOwner, "Platform Owner"),
+        new(RoleCodes.TenantOwner, "Tenant Owner"),
     ];
 
     /// <summary>
@@ -28,14 +28,14 @@ public static class RbacCatalog
     public static IReadOnlyDictionary<string, string[]> RolePermissions =>
         new Dictionary<string, string[]>(StringComparer.Ordinal)
         {
-            [RoleCodes.PlatformAdmin] =
+            [RoleCodes.PlatformOwner] =
             [
                 PermissionCodes.TenantsManage,
                 PermissionCodes.BranchesManage,
                 PermissionCodes.UsersAssignRoles,
                 PermissionCodes.UsersInvite,
             ],
-            [RoleCodes.TenantAdmin] =
+            [RoleCodes.TenantOwner] =
             [
                 PermissionCodes.BranchesManage,
                 PermissionCodes.UsersAssignRoles,

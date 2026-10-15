@@ -2,6 +2,6 @@ namespace TalyerApp.Domain.Authorization;
 
 public static class RoleCodes
 {
-    public const string PlatformAdmin = "platform_admin";
-    public const string TenantAdmin = "tenant_admin";
+    public const string PlatformOwner = "platform_owner";
+    public const string TenantOwner = "tenant_owner";
 }

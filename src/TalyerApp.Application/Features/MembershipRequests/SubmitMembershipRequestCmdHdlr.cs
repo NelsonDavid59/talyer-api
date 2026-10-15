@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Options;
 using TalyerApp.Application.Common.Interfaces.CQRS;
 using TalyerApp.Application.Common.Interfaces.Notifications;
 using TalyerApp.Application.Common.Interfaces.Repository;
@@ -13,23 +12,20 @@ public class SubmitMembershipRequestCmdHdlr : ICommandHandler<SubmitMembershipRe
     private readonly ITenantRep _tenantRepository;
     private readonly IUserRep _userRepository;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IEmailSender _emailSender;
-    private readonly MembershipOptions _options;
+    private readonly IMembershipEmailService _membershipEmailService;
 
     public SubmitMembershipRequestCmdHdlr(
         IMembershipRequestRep membershipRequestRepository,
         ITenantRep tenantRepository,
         IUserRep userRepository,
         IUnitOfWork unitOfWork,
-        IEmailSender emailSender,
-        IOptions<MembershipOptions> options)
+        IMembershipEmailService membershipEmailService)
     {
         _membershipRequestRepository = membershipRequestRepository;
         _tenantRepository = tenantRepository;
         _userRepository = userRepository;
         _unitOfWork = unitOfWork;
-        _emailSender = emailSender;
-        _options = options.Value;
+        _membershipEmailService = membershipEmailService;
     }
 
     public async Task<Result<int>> HandleAsync(
@@ -65,15 +61,15 @@ public class SubmitMembershipRequestCmdHdlr : ICommandHandler<SubmitMembershipRe
         _membershipRequestRepository.Add(request);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        var confirmUrl = $"{_options.ConfirmEmailBaseUrl.TrimEnd('/')}/membership-requests/confirm-email";
-        var body =
-            $"Confirm your email by POSTing JSON {{\"token\":\"{plainToken}\"}} to {confirmUrl}. Token: {plainToken}";
-
-        await _emailSender.SendAsync(
-            request.Email,
-            "Confirm your Talyer membership request",
-            body,
+        var emailResult = await _membershipEmailService.SendConfirmRequestAsync(
+            request,
+            plainToken,
             cancellationToken);
+
+        if (emailResult.IsFailure)
+        {
+            return Result<int>.Failure(emailResult.Error);
+        }
 
         return Result<int>.Success(request.Id);
     }

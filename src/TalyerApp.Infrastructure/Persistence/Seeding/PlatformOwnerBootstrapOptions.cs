@@ -1,10 +1,10 @@
 namespace TalyerApp.Infrastructure.Persistence.Seeding;
 
-public class PlatformAdminBootstrapOptions
+public class PlatformOwnerBootstrapOptions
 {
-    public const string SectionName = "Bootstrap:PlatformAdmin";
+    public const string SectionName = "Bootstrap:PlatformOwner";
 
-    public string Provider { get; set; } = "keycloak";
+    public string Provider { get; set; } = string.Empty;
 
     public string ProviderUserId { get; set; } = string.Empty;
 
