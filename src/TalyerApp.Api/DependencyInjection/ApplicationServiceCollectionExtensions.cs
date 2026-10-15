@@ -1,6 +1,6 @@
-using TalyerApp.Application.Common.Authorization;
 using TalyerApp.Application.Common.Dispatching;
 using TalyerApp.Application.Common.Interfaces.CQRS;
+using TalyerApp.Application.Common.Interfaces.Notifications;
 using TalyerApp.Application.Dto;
 using TalyerApp.Application.Features.ExternalIdentities;
 using TalyerApp.Application.Features.MembershipRequests;
@@ -29,7 +29,7 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<ICommandHandler<RejectMembershipRequestCmd, int>, RejectMembershipRequestCmdHdlr>();
         services.AddScoped<IQueryHandler<GetMembershipRequestsQuery, IReadOnlyList<MembershipRequestDto>>, GetMembershipRequestsQueryHdlr>();
 
-        services.AddScoped<IPlatformAdminAuthorizer, PlatformAdminAuthorizer>();
+        services.AddScoped<IMembershipEmailService, MembershipEmailService>();
 
         return services;
     }

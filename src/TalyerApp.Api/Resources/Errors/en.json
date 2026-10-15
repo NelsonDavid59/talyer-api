@@ -37,6 +37,8 @@
   "MembershipRequest.InvalidStatus": "The membership request is not in a valid status for this action.",
   "MembershipRequest.IdentityProviderError": "The identity provider operation failed.",
   "MembershipRequest.ApprovalSystemError": "Membership approval could not be completed. Try again later or contact support.",
+  "MembershipRequest.EmailDeliveryFailed": "We could not send the confirmation email. Try again later.",
+  "MembershipRequest.ConfirmationEmailFailed": "Your email could not be confirmed because the confirmation message could not be sent. Open the link again to retry.",
   "IdentityAdmin.UserAlreadyExists": "A user with this email already exists in the identity provider.",
   "IdentityAdmin.OperationFailed": "The identity provider operation failed.",
   "Branch.NotFound": "Branch not found.",

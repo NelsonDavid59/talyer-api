@@ -6,12 +6,12 @@ public static class RoleTenantAssignmentRules
 {
     public static bool IsAllowed(string roleCode, TenantType tenantType, int? branchId)
     {
-        if (string.Equals(roleCode, RoleCodes.PlatformAdmin, StringComparison.Ordinal))
+        if (string.Equals(roleCode, RoleCodes.PlatformOwner, StringComparison.Ordinal))
         {
             return tenantType == TenantType.Platform && branchId is null;
         }
 
-        if (string.Equals(roleCode, RoleCodes.TenantAdmin, StringComparison.Ordinal))
+        if (string.Equals(roleCode, RoleCodes.TenantOwner, StringComparison.Ordinal))
         {
             return tenantType == TenantType.Customer;
         }

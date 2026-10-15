@@ -1,6 +1,6 @@
 namespace TalyerApp.Application.Common.Interfaces.Persistence;
 
-public interface IPlatformAdminBootstrapSeeder
+public interface IPlatformOwnerBootstrapSeeder
 {
     Task BootstrapAsync(CancellationToken cancellationToken = default);
 }

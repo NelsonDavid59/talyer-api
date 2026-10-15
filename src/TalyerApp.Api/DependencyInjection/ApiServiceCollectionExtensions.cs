@@ -3,6 +3,7 @@ using TalyerApp.Api.Configuration;
 using TalyerApp.Api.Localization;
 using TalyerApp.Application.Common.Interfaces.Localization;
 using TalyerApp.Infrastructure.Identity;
+using TalyerApp.Infrastructure.Notifications;
 using TalyerApp.Infrastructure.Persistence.Seeding;
 
 namespace TalyerApp.Api.DependencyInjection;
@@ -13,8 +14,8 @@ public static class ApiServiceCollectionExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        services.Configure<PlatformAdminBootstrapOptions>(
-            configuration.GetSection(PlatformAdminBootstrapOptions.SectionName));
+        services.Configure<PlatformOwnerBootstrapOptions>(
+            configuration.GetSection(PlatformOwnerBootstrapOptions.SectionName));
 
         services.AddSingleton<IValidateOptions<KeycloakSharedOptions>, KeycloakSharedOptionsValidator>();
         services.AddOptions<KeycloakSharedOptions>()
@@ -49,10 +50,16 @@ public static class ApiServiceCollectionExtensions
             })
             .ValidateOnStart();
 
+        services.AddSingleton<IValidateOptions<SmtpOptions>, SmtpOptionsValidator>();
+        services.AddOptions<SmtpOptions>()
+            .Bind(configuration.GetSection(SmtpOptions.SectionName))
+            .ValidateOnStart();
+
         services.AddSingleton<ErrorCatalog>();
         services.AddSingleton<IErrorMessageResolver, JsonErrorMessageResolver>();
         services.AddSingleton<IErrorHttpStatusMapper, ErrorHttpStatusMapper>();
         services.AddSingleton<ErrorCatalogValidator>();
+        services.AddSingleton<EmailTemplateValidator>();
 
         return services;
     }

@@ -38,6 +38,17 @@ public class UserRoleAssignmentRep : IUserRoleAssignmentRep
             cancellationToken);
     }
 
+    public async Task<IReadOnlyList<UserRoleAssignment>> GetByUserIdAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _context.UserRoleAssignments
+            .AsNoTracking()
+            .Include(a => a.Role)
+            .Where(a => a.UserId == userId)
+            .ToListAsync(cancellationToken);
+    }
+
     public void Add(UserRoleAssignment assignment)
     {
         _context.UserRoleAssignments.Add(assignment);
