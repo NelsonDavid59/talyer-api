@@ -1,8 +1,8 @@
 namespace TalyerApp.Api.Configuration;
 
-public class KeycloakApiOptions
+public class Auth0ApiOptions
 {
-    public const string SectionName = "Keycloak:Api";
+    public const string SectionName = "Auth0:Api";
 
     public string? BaseUrl { get; set; }
 

@@ -21,13 +21,13 @@ public static class WebApplicationExtensions
             return app;
         }
 
-        var docsOptions = app.Services.GetRequiredService<IOptions<KeycloakDocsOptions>>().Value;
+        var docsOptions = app.Services.GetRequiredService<IOptions<Auth0DocsOptions>>().Value;
 
         app.MapOpenApi();
         app.MapScalarApiReference(docsOptions.ScalarRoute!, options =>
         {
             options
-                .AddPreferredSecuritySchemes("OAuth2")
+                .AddPreferredSecuritySchemes("TalyerJwt", "OAuth2")
                 .AddAuthorizationCodeFlow("OAuth2", flow =>
                 {
                     flow.ClientId = docsOptions.OAuthClientId!;

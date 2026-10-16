@@ -1,8 +1,8 @@
 namespace TalyerApp.Api.Configuration;
 
-public class KeycloakDocsOptions
+public class Auth0DocsOptions
 {
-    public const string SectionName = "Keycloak:Docs";
+    public const string SectionName = "Auth0:Docs";
 
     public string? ScalarRoute { get; set; }
 

@@ -4,10 +4,10 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TalyerApp.Application.Common.Interfaces.Persistence;
 using TalyerApp.Application.Common.Interfaces.Repository;
-using TalyerApp.Application.Features.ExternalIdentities;
 using TalyerApp.Application.Features.UserRoleAssignments;
 using TalyerApp.Application.Interfaces;
 using TalyerApp.Domain.Authorization;
+using TalyerApp.Domain.Entities;
 using TalyerApp.Domain.Shared.Result;
 
 namespace TalyerApp.Infrastructure.Persistence.Seeding;
@@ -16,7 +16,9 @@ public class PlatformOwnerBootstrapSeeder : IPlatformOwnerBootstrapSeeder
 {
     private readonly ApplicationDbContext _context;
     private readonly ICommandDispatcher _commandDispatcher;
+    private readonly IUserRep _userRepository;
     private readonly IUserRoleAssignmentRep _userRoleAssignmentRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly PlatformOwnerBootstrapOptions _options;
     private readonly IHostEnvironment _hostEnvironment;
     private readonly ILogger<PlatformOwnerBootstrapSeeder> _logger;
@@ -24,14 +26,18 @@ public class PlatformOwnerBootstrapSeeder : IPlatformOwnerBootstrapSeeder
     public PlatformOwnerBootstrapSeeder(
         ApplicationDbContext context,
         ICommandDispatcher commandDispatcher,
+        IUserRep userRepository,
         IUserRoleAssignmentRep userRoleAssignmentRepository,
+        IUnitOfWork unitOfWork,
         IOptions<PlatformOwnerBootstrapOptions> options,
         IHostEnvironment hostEnvironment,
         ILogger<PlatformOwnerBootstrapSeeder> logger)
     {
         _context = context;
         _commandDispatcher = commandDispatcher;
+        _userRepository = userRepository;
         _userRoleAssignmentRepository = userRoleAssignmentRepository;
+        _unitOfWork = unitOfWork;
         _options = options.Value;
         _hostEnvironment = hostEnvironment;
         _logger = logger;
@@ -43,30 +49,44 @@ public class PlatformOwnerBootstrapSeeder : IPlatformOwnerBootstrapSeeder
 
         await EnsureReferenceDataExistsAsync(cancellationToken);
 
-        var provider = _options.Provider.Trim();
-
-        var registerResult = await _commandDispatcher.DispatchAsync<RegisterExternalIdentityCmd, Guid>(
-            new RegisterExternalIdentityCmd(
-                Provider: provider,
-                ProviderUserId: _options.ProviderUserId.Trim(),
-                Username: _options.Username.Trim(),
-                FirstName: _options.FirstName.Trim(),
-                LastName: _options.LastName.Trim(),
-                Email: _options.Email.Trim()),
-            cancellationToken);
-
-        if (registerResult.IsFailure)
+        var email = _options.Email.Trim();
+        var userResult = await _userRepository.GetByEmailAsync(email);
+        Guid userId;
+        if (userResult.IsSuccess)
         {
-            throw new InvalidOperationException(
-                $"Failed to register platform owner external identity ({registerResult.Error.Code}).");
+            userId = userResult.Value.Id;
+            _logger.LogInformation(
+                "Platform owner user already exists. UserId: {UserId}, Email: {Email}",
+                userId,
+                email);
         }
+        else
+        {
+            if (userResult.Error.Code != ErrorCodes.User.NotFound)
+            {
+                throw new InvalidOperationException(
+                    $"Failed to look up platform owner ({userResult.Error.Code}).");
+            }
 
-        var userId = registerResult.Value;
-        _logger.LogInformation(
-            "Platform owner user linked. UserId: {UserId}, Provider: {Provider}, ProviderUserId: {ProviderUserId}",
-            userId,
-            provider,
-            _options.ProviderUserId);
+            var createResult = User.Create(
+                email,
+                _options.Username.Trim(),
+                _options.FirstName.Trim(),
+                _options.LastName.Trim());
+            if (createResult.IsFailure)
+            {
+                throw new InvalidOperationException(
+                    $"Failed to create platform owner user ({createResult.Error.Code}).");
+            }
+
+            _userRepository.Add(createResult.Value);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            userId = createResult.Value.Id;
+            _logger.LogInformation(
+                "Platform owner user created. UserId: {UserId}, Email: {Email}",
+                userId,
+                email);
+        }
 
         var role = await _context.Roles
             .AsNoTracking()
@@ -123,16 +143,6 @@ public class PlatformOwnerBootstrapSeeder : IPlatformOwnerBootstrapSeeder
     {
         var missing = new List<string>();
 
-        if (string.IsNullOrWhiteSpace(_options.Provider))
-        {
-            missing.Add(nameof(PlatformOwnerBootstrapOptions.Provider));
-        }
-
-        if (string.IsNullOrWhiteSpace(_options.ProviderUserId))
-        {
-            missing.Add(nameof(PlatformOwnerBootstrapOptions.ProviderUserId));
-        }
-
         if (string.IsNullOrWhiteSpace(_options.Email))
         {
             missing.Add(nameof(PlatformOwnerBootstrapOptions.Email));
@@ -161,7 +171,7 @@ public class PlatformOwnerBootstrapSeeder : IPlatformOwnerBootstrapSeeder
         var missingList = string.Join(", ", missing);
         var hint = _hostEnvironment.IsDevelopment()
             ? "Copy src/TalyerApp.Api/usersecrets.example.json to usersecrets.json and set Bootstrap:PlatformOwner values."
-            : "Set environment variables Bootstrap__PlatformOwner__* (e.g. Bootstrap__PlatformOwner__ProviderUserId).";
+            : "Set environment variables Bootstrap__PlatformOwner__* (e.g. Bootstrap__PlatformOwner__Email).";
 
         throw new InvalidOperationException(
             $"Platform owner bootstrap configuration is incomplete. Missing: {missingList}. {hint}");

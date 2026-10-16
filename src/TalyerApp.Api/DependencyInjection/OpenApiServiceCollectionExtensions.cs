@@ -15,17 +15,17 @@ public static class OpenApiServiceCollectionExtensions
             options.AddDocumentTransformer((document, context, cancellationToken) =>
             {
                 var apiOptions = context.ApplicationServices
-                    .GetRequiredService<IOptions<KeycloakApiOptions>>()
+                    .GetRequiredService<IOptions<Auth0ApiOptions>>()
                     .Value;
                 var sharedOptions = context.ApplicationServices
-                    .GetRequiredService<IOptions<KeycloakSharedOptions>>()
+                    .GetRequiredService<IOptions<Auth0SharedOptions>>()
                     .Value;
                 var docsOptions = context.ApplicationServices
-                    .GetRequiredService<IOptions<KeycloakDocsOptions>>()
+                    .GetRequiredService<IOptions<Auth0DocsOptions>>()
                     .Value;
 
-                var authorizationUrl = KeycloakUrlBuilder.GetAuthorizationEndpoint(apiOptions, sharedOptions);
-                var tokenUrl = KeycloakUrlBuilder.GetTokenEndpoint(apiOptions, sharedOptions);
+                var authorizationUrl = Auth0UrlBuilder.GetAuthorizationEndpoint(apiOptions, sharedOptions);
+                var tokenUrl = Auth0UrlBuilder.GetTokenEndpoint(apiOptions, sharedOptions);
 
                 var scopes = docsOptions.OAuthScopes!
                     .ToDictionary(
@@ -45,7 +45,7 @@ public static class OpenApiServiceCollectionExtensions
                     new OpenApiSecurityScheme
                     {
                         Type = SecuritySchemeType.OAuth2,
-                        Description = "Keycloak OAuth2 Authorization Code + PKCE",
+                        Description = "Auth0 OAuth2 for POST /session (Magic Link / Authorization Code + PKCE)",
                         Flows = new OpenApiOAuthFlows
                         {
                             AuthorizationCode = new OpenApiOAuthFlow
@@ -55,6 +55,15 @@ public static class OpenApiServiceCollectionExtensions
                                 Scopes = scopes
                             }
                         }
+                    };
+
+                document.Components.SecuritySchemes["TalyerJwt"] =
+                    new OpenApiSecurityScheme
+                    {
+                        Type = SecuritySchemeType.Http,
+                        Scheme = "bearer",
+                        BearerFormat = "JWT",
+                        Description = "Talyer session JWT from POST /session"
                     };
 
                 return Task.CompletedTask;

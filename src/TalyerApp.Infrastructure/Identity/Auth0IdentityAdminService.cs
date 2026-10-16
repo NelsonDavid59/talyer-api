@@ -9,33 +9,32 @@ using TalyerApp.Domain.Shared.Result;
 
 namespace TalyerApp.Infrastructure.Identity;
 
-public class KeycloakIdentityAdminService : IIdentityAdminService
+public class Auth0IdentityAdminService : IIdentityAdminService
 {
     private readonly HttpClient _httpClient;
-    private readonly KeycloakAdminOptions _options;
-    private readonly ILogger<KeycloakIdentityAdminService> _logger;
+    private readonly Auth0AdminOptions _options;
+    private readonly ILogger<Auth0IdentityAdminService> _logger;
 
-    public KeycloakIdentityAdminService(
+    public Auth0IdentityAdminService(
         HttpClient httpClient,
-        IOptions<KeycloakAdminOptions> options,
-        ILogger<KeycloakIdentityAdminService> logger)
+        IOptions<Auth0AdminOptions> options,
+        ILogger<Auth0IdentityAdminService> logger)
     {
         _httpClient = httpClient;
         _options = options.Value;
         _logger = logger;
     }
 
-    public async Task<Result<string>> CreateUserAsync(
-        string email,
-        string username,
-        string firstName,
-        string lastName,
+    public string Provider => "auth0";
+
+    public async Task<Result<CreatedIdentityUser>> CreateUserAsync(
+        CreateIdentityUserRequest createRequest,
         CancellationToken cancellationToken = default)
     {
         var tokenResult = await GetAccessTokenAsync(cancellationToken);
         if (tokenResult.IsFailure)
         {
-            return Result<string>.Failure(tokenResult.Error);
+            return Result<CreatedIdentityUser>.Failure(tokenResult.Error);
         }
 
         using var request = new HttpRequestMessage(
@@ -44,10 +43,8 @@ public class KeycloakIdentityAdminService : IIdentityAdminService
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", tokenResult.Value);
         request.Content = JsonContent.Create(new
         {
-            username,
-            email,
-            firstName,
-            lastName,
+            email = createRequest.Email,
+            nickname = createRequest.Username,
             enabled = true,
             emailVerified = false
         });
@@ -56,26 +53,26 @@ public class KeycloakIdentityAdminService : IIdentityAdminService
 
         if (response.StatusCode == HttpStatusCode.Conflict)
         {
-            return Result<string>.Failure(DomainErrors.IdentityAdmin.UserAlreadyExists);
+            return Result<CreatedIdentityUser>.Failure(DomainErrors.IdentityAdmin.UserAlreadyExists);
         }
 
         if (!response.IsSuccessStatusCode)
         {
             _logger.LogError(
-                "Keycloak create user failed. Status: {Status}. Body: {Body}",
+                "Auth0 create user failed. Status: {Status}. Body: {Body}",
                 (int)response.StatusCode,
                 await response.Content.ReadAsStringAsync(cancellationToken));
-            return Result<string>.Failure(DomainErrors.IdentityAdmin.OperationFailed);
+            return Result<CreatedIdentityUser>.Failure(DomainErrors.IdentityAdmin.OperationFailed);
         }
 
         var location = response.Headers.Location?.ToString();
         if (string.IsNullOrWhiteSpace(location))
         {
-            return Result<string>.Failure(DomainErrors.IdentityAdmin.OperationFailed);
+            return Result<CreatedIdentityUser>.Failure(DomainErrors.IdentityAdmin.OperationFailed);
         }
 
         var id = location.TrimEnd('/').Split('/').Last();
-        return Result<string>.Success(id);
+        return Result<CreatedIdentityUser>.Success(new CreatedIdentityUser(Provider, id));
     }
 
     public async Task<bool> UserExistsByEmailAsync(string email, CancellationToken cancellationToken = default)
@@ -83,7 +80,7 @@ public class KeycloakIdentityAdminService : IIdentityAdminService
         var tokenResult = await GetAccessTokenAsync(cancellationToken);
         if (tokenResult.IsFailure)
         {
-            _logger.LogError("Keycloak token failed while checking email existence.");
+            _logger.LogError("Auth0 token failed while checking email existence.");
             return false;
         }
 
@@ -96,7 +93,7 @@ public class KeycloakIdentityAdminService : IIdentityAdminService
         if (!response.IsSuccessStatusCode)
         {
             _logger.LogError(
-                "Keycloak lookup user by email failed. Status: {Status}",
+                "Auth0 lookup user by email failed. Status: {Status}",
                 (int)response.StatusCode);
             return false;
         }
@@ -111,7 +108,7 @@ public class KeycloakIdentityAdminService : IIdentityAdminService
         if (tokenResult.IsFailure)
         {
             _logger.LogError(
-                "Keycloak token failed while deleting user {ProviderUserId}.",
+                "Auth0 token failed while deleting user {ProviderUserId}.",
                 providerUserId);
             return;
         }
@@ -125,48 +122,17 @@ public class KeycloakIdentityAdminService : IIdentityAdminService
         if (!response.IsSuccessStatusCode && response.StatusCode != HttpStatusCode.NotFound)
         {
             _logger.LogError(
-                "Failed to delete Keycloak user {ProviderUserId}. Status: {Status}",
+                "Failed to delete Auth0 user {ProviderUserId}. Status: {Status}",
                 providerUserId,
                 (int)response.StatusCode);
         }
-    }
-
-    public async Task<Result> SendExecuteActionsEmailAsync(
-        string providerUserId,
-        IReadOnlyList<string> actions,
-        CancellationToken cancellationToken = default)
-    {
-        var tokenResult = await GetAccessTokenAsync(cancellationToken);
-        if (tokenResult.IsFailure)
-        {
-            return Result.Failure(tokenResult.Error);
-        }
-
-        using var request = new HttpRequestMessage(
-            HttpMethod.Put,
-            $"/admin/realms/{_options.Realm}/users/{providerUserId}/execute-actions-email");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", tokenResult.Value);
-        request.Content = JsonContent.Create(actions);
-
-        using var response = await _httpClient.SendAsync(request, cancellationToken);
-        if (!response.IsSuccessStatusCode)
-        {
-            _logger.LogError(
-                "Keycloak execute-actions-email failed for {ProviderUserId}. Status: {Status}. Body: {Body}",
-                providerUserId,
-                (int)response.StatusCode,
-                await response.Content.ReadAsStringAsync(cancellationToken));
-            return Result.Failure(DomainErrors.MembershipRequest.ApprovalSystemError);
-        }
-
-        return Result.Success();
     }
 
     private async Task<Result<string>> GetAccessTokenAsync(CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(_options.ClientId) || string.IsNullOrWhiteSpace(_options.ClientSecret))
         {
-            _logger.LogError("Keycloak:Admin ClientId or ClientSecret is missing.");
+            _logger.LogError("Auth0:Admin ClientId or ClientSecret is missing.");
             return Result<string>.Failure(DomainErrors.IdentityAdmin.OperationFailed);
         }
 
@@ -184,7 +150,7 @@ public class KeycloakIdentityAdminService : IIdentityAdminService
         if (!response.IsSuccessStatusCode)
         {
             _logger.LogError(
-                "Keycloak client credentials failed. Status: {Status}. Body: {Body}",
+                "Auth0 client credentials failed. Status: {Status}. Body: {Body}",
                 (int)response.StatusCode,
                 await response.Content.ReadAsStringAsync(cancellationToken));
             return Result<string>.Failure(DomainErrors.IdentityAdmin.OperationFailed);

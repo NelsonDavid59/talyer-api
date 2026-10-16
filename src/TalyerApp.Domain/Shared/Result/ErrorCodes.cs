@@ -61,6 +61,11 @@ public static class ErrorCodes
         public const string Forbidden = "Authorization.Forbidden";
     }
 
+    public static class Session
+    {
+        public const string UserNotRegistered = "Session.UserNotRegistered";
+    }
+
     public static class MembershipRequest
     {
         public const string NotFound = "MembershipRequest.NotFound";

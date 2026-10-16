@@ -7,10 +7,10 @@ public static class ConfigureJwtBearerOptions
 {
     public static void Apply(
         JwtBearerOptions options,
-        KeycloakApiOptions api,
-        KeycloakSharedOptions shared)
+        Auth0ApiOptions api,
+        Auth0SharedOptions shared)
     {
-        options.Authority = KeycloakUrlBuilder.GetAuthority(api, shared);
+        options.Authority = Auth0UrlBuilder.GetAuthority(api, shared);
         options.Audience = api.Audience!;
         options.RequireHttpsMetadata = api.RequireHttpsMetadata!.Value;
     }

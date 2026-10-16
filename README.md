@@ -48,24 +48,28 @@ En el entorno de desarrollo se habilitan OpenAPI y Scalar:
 - OpenAPI: http://localhost:5066/openapi/v1.json
 - Scalar: http://localhost:5066/talyer-app-api
 
-Keycloak se configura bajo `Keycloak` (`appsettings.json`, `appsettings.{Environment}.json` o `usersecrets.json`). **ValidateOnStart**: la API no arranca si falta configuracion obligatoria. `BaseUrl` y `Realm` se definen una vez en la raiz (`Keycloak:BaseUrl`, `Keycloak:Realm`) y aplican a JWT y al cliente Admin HTTP, salvo override en `Keycloak:Api` o `Keycloak:Admin`.
+Auth0 se configura bajo `Auth0` (`appsettings.json`, `appsettings.{Environment}.json` o `usersecrets.json`). **ValidateOnStart**: la API no arranca si falta configuracion obligatoria. `BaseUrl` y `Realm` se definen una vez en la raiz (`Auth0:BaseUrl`, `Auth0:Realm`) y aplican a JWT y al cliente Admin HTTP, salvo override en `Auth0:Api` o `Auth0:Admin`.
 
 | Clave | Obligatorio | Descripcion |
 |-------|-------------|-------------|
-| `Keycloak__BaseUrl` | Si | URL base del servidor Keycloak (p. ej. `http://localhost:8080`) |
-| `Keycloak__Realm` | Si | Nombre del realm (p. ej. `talyer-realm`) |
-| `Keycloak__Api__Audience` | Si | Audiencia del resource server |
-| `Keycloak__Api__RequireHttpsMetadata` | Si | `true` o `false` explicito (`false` en Development, `true` en Production via `appsettings.Production.json`) |
-| `Keycloak__Api__Authority` | Condicional | Authority JWT; si no se define, se usa `{BaseUrl}/realms/{Realm}` (raiz o override en Api) |
-| `Keycloak__Api__BaseUrl` | No | Override opcional de `Keycloak:BaseUrl` solo para JWT |
-| `Keycloak__Api__Realm` | No | Override opcional de `Keycloak:Realm` solo para JWT |
-| `Keycloak__Admin__ClientId` | Si | Client confidential de servicio (`talyer-api-admin`) |
-| `Keycloak__Admin__ClientSecret` | Si | Secret del client Admin (solo `usersecrets` / variables de entorno, no commitear) |
-| `Keycloak__Admin__BaseUrl` | No | Override opcional de `Keycloak:BaseUrl` solo para Admin API |
-| `Keycloak__Admin__Realm` | No | Override opcional de `Keycloak:Realm` solo para Admin API |
-| `Keycloak__Docs__ScalarRoute` | Si | Ruta de Scalar (debe empezar con `/`) |
-| `Keycloak__Docs__OAuthClientId` | Si | Client publico para la documentacion |
-| `Keycloak__Docs__OAuthScopes` | Si | Al menos un scope (p. ej. `openid`, `profile`, `email`) |
+| `Auth0__BaseUrl` | Si | URL base del servidor Auth0 (p. ej. `http://localhost:8080`) |
+| `Auth0__Realm` | Si | Nombre del realm (p. ej. `talyer-realm`) |
+| `Auth0__Api__Audience` | Si | Audiencia del resource server |
+| `Auth0__Api__RequireHttpsMetadata` | Si | `true` o `false` explicito (`false` en Development, `true` en Production via `appsettings.Production.json`) |
+| `Auth0__Api__Authority` | Condicional | Authority JWT; si no se define, se usa `{BaseUrl}/realms/{Realm}` (raiz o override en Api) |
+| `Auth0__Api__BaseUrl` | No | Override opcional de `Auth0:BaseUrl` solo para JWT |
+| `Auth0__Api__Realm` | No | Override opcional de `Auth0:Realm` solo para JWT |
+| `Auth0__Admin__ClientId` | Si | Client confidential de servicio (`talyer-api-admin`) |
+| `Auth0__Admin__ClientSecret` | Si | Secret del client Admin (solo `usersecrets` / variables de entorno, no commitear) |
+| `Auth0__Admin__BaseUrl` | No | Override opcional de `Auth0:BaseUrl` solo para Admin API |
+| `Auth0__Admin__Realm` | No | Override opcional de `Auth0:Realm` solo para Admin API |
+| `Auth0__Docs__ScalarRoute` | Si | Ruta de Scalar (debe empezar con `/`) |
+| `Auth0__Docs__OAuthClientId` | Si | Client publico para la documentacion |
+| `Auth0__Docs__OAuthScopes` | Si | Al menos un scope (p. ej. `openid`, `profile`, `email`) |
+| `Talyer__Session__Issuer` | Si | Issuer del JWT de sesion Talyer (`appsettings.json`) |
+| `Talyer__Session__Audience` | Si | Audience del JWT de sesion Talyer |
+| `Talyer__Session__LifetimeMinutes` | Si | Vida del JWT Talyer (p. ej. 480) |
+| `Talyer__Session__SigningKey` | Si | HMAC del JWT Talyer (min. 32 bytes; solo `usersecrets` / entorno) |
 | `Smtp__Host` | Si | Host SMTP |
 | `Smtp__Port` | Si | Puerto SMTP (p. ej. 587) |
 | `Smtp__User` | Si | Usuario SMTP |
@@ -120,9 +124,9 @@ Orden recomendado en un entorno nuevo:
 
 ## Bootstrap platform admin
 
-Crea en la base de datos el primer usuario operativo con rol `platform_owner` en el tenant `platform`, enlazado al usuario de Keycloak mediante `ExternalIdentity` (`provider` + `sub`).
+Crea (o reutiliza) el primer usuario operativo en Talyer con rol `platform_owner` en el tenant `platform`. **No** pide el `sub` de Auth0 ni escribe `ExternalIdentity`. El enlace al IdP ocurre en el primer Magic Link: `POST /session` busca el `User` por email e inserta `ExternalIdentity`.
 
-**Prerrequisitos:** usuario ya creado en Keycloak; migraciones aplicadas; `seed` ejecutado.
+**Prerrequisitos:** migraciones aplicadas; `seed` ejecutado. El email de Auth0 Passwordless debe coincidir con `Bootstrap:PlatformOwner:Email`.
 
 ### Development
 
@@ -132,15 +136,15 @@ Crea en la base de datos el primer usuario operativo con rol `platform_owner` en
 cp src/TalyerApp.Api/usersecrets.example.json src/TalyerApp.Api/usersecrets.json
 ```
 
-2. Completar `ConnectionStrings:DefaultConnection` y `Bootstrap:PlatformOwner` en `usersecrets.json`. El campo `ProviderUserId` debe ser el **ID de usuario** de Keycloak (claim `sub` del JWT). En la consola de administracion: realm → Users → usuario → campo **ID**.
+2. Completar `ConnectionStrings:DefaultConnection`, `Talyer:Session:SigningKey` (minimo 32 caracteres) y `Bootstrap:PlatformOwner` (`Email`, `Username`, `FirstName`, `LastName`) en `usersecrets.json`.
 
-3. Los demas campos deben coincidir con el perfil y los claims del token (`email`, `preferred_username`, `given_name`, `family_name`).
-
-4. Ejecutar (con `ASPNETCORE_ENVIRONMENT=Development`, p. ej. perfil por defecto de `launchSettings.json`):
+3. Ejecutar (con `ASPNETCORE_ENVIRONMENT=Development`, p. ej. perfil por defecto de `launchSettings.json`):
 
 ```bash
 dotnet run --project src/TalyerApp.Api/TalyerApp.Api.csproj -- bootstrap-platform-owner
 ```
+
+4. Login: Magic Link de Auth0 con ese email → `POST /session` (Bearer Auth0) → JWT Talyer para el resto de la API.
 
 Las variables de entorno `Bootstrap__PlatformOwner__*` tienen prioridad sobre `usersecrets.json` si ambas estan definidas.
 
@@ -151,12 +155,11 @@ No se carga `usersecrets.json`. Definir variables de entorno en el host o conten
 | Variable | Obligatorio | Descripcion |
 |----------|-------------|-------------|
 | `ConnectionStrings__DefaultConnection` | Si | Cadena PostgreSQL (incluye password) |
-| `Bootstrap__PlatformOwner__ProviderUserId` | Si | UUID `sub` de Keycloak |
-| `Bootstrap__PlatformOwner__Email` | Si | Claim `email` |
-| `Bootstrap__PlatformOwner__Username` | Si | Claim `preferred_username` |
-| `Bootstrap__PlatformOwner__FirstName` | Si | Claim `given_name` |
-| `Bootstrap__PlatformOwner__LastName` | Si | Claim `family_name` |
-| `Bootstrap__PlatformOwner__Provider` | Si | IdP (`keycloak`, etc.) |
+| `Talyer__Session__SigningKey` | Si | Clave HMAC del JWT Talyer (min. 32 bytes) |
+| `Bootstrap__PlatformOwner__Email` | Si | Email del platform owner (mismo que Auth0) |
+| `Bootstrap__PlatformOwner__Username` | Si | Username local |
+| `Bootstrap__PlatformOwner__FirstName` | Si | Nombre |
+| `Bootstrap__PlatformOwner__LastName` | Si | Apellido |
 
 Ejemplo en Docker Compose:
 
@@ -164,8 +167,7 @@ Ejemplo en Docker Compose:
 environment:
   ASPNETCORE_ENVIRONMENT: Production
   ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=talyer;Username=postgres;Password=<secret>"
-  Bootstrap__PlatformOwner__Provider: "keycloak"
-  Bootstrap__PlatformOwner__ProviderUserId: "<sub-keycloak>"
+  Talyer__Session__SigningKey: "<at-least-32-character-secret>"
   Bootstrap__PlatformOwner__Email: "admin@example.com"
   Bootstrap__PlatformOwner__Username: "platform.admin"
   Bootstrap__PlatformOwner__FirstName: "Platform"
@@ -178,7 +180,7 @@ El comando es idempotente: puede ejecutarse de nuevo sin duplicar usuario ni asi
 
 ## Solicitud de membresia e invitacion
 
-Flujo de alta de un taller (tenant `CUSTOMER` + `tenant_owner`). El formulario **no** crea usuario en Keycloak. El `platform_owner` aprueba y ahi se crea la cuenta en el IdP (la invitacion **es** el registro: el interesado define contrasena con el mail de Keycloak).
+Flujo de alta de un taller (tenant `CUSTOMER` + `tenant_owner`). El formulario **no** crea usuario en Auth0. El `platform_owner` aprueba y ahi se crea la cuenta en el IdP. El login posterior es passwordless (Magic Link de Auth0), no un mail de set-password.
 
 Cualquiera puede solicitar membresia (demo / MVP, sin pago). El filtro es la aprobacion del `platform_owner`.
 
@@ -187,15 +189,15 @@ Cualquiera puede solicitar membresia (demo / MVP, sin pago). El filtro es la apr
 Completar en `usersecrets.json` (ver `usersecrets.example.json`):
 
 - `ConnectionStrings:DefaultConnection`: PostgreSQL local (el password no va en `appsettings.json`).
-- `Keycloak:Admin`: client confidential de servicio (`talyer-api-admin`) con `manage-users` en el realm `talyer-realm`.
+- `Auth0:Admin`: client confidential de servicio (`talyer-api-admin`) con `manage-users` en el realm `talyer-realm`.
 - `Membership:ConfirmEmailBaseUrl`: origen de la API (el link del mail apunta a `GET /membership-requests/confirm-email?token=`).
 - `Smtp`: `Host`, `Port`, `User`, `Password`, `From`, `UseSsl` (obligatorio; secretos en `usersecrets.json`).
 
 Cuerpos HTML editables en `src/TalyerApp.Api/Resources/Emails/` (`confirm-request.html`, `email-confirmed.html`, paginas de resultado). Placeholders: `{{ConfirmUrl}}`, `{{FirstName}}`, `{{LastName}}`, `{{CompanyName}}`, `{{Message}}`, `{{LifetimeHours}}`.
 
-En Keycloak: Clients → Create → `talyer-api-admin`, Client authentication ON, Service accounts roles → realm-management → `manage-users`.
+En Auth0: Clients → Create → `talyer-api-admin`, Client authentication ON, Service accounts roles → realm-management → `manage-users`.
 
-**Correo del realm (obligatorio para aprobar):** Realm settings → **Email** con **From** y SMTP configurados. La aprobacion es **atomica**: la API crea el usuario en Keycloak, envia el mail de invitacion (`UPDATE_PASSWORD`) y solo entonces persiste tenant/usuario en Talyer. Si el envio falla, se elimina el usuario en Keycloak, la solicitud sigue en `PendingReview` y la API responde **500** con un mensaje generico (el detalle de Keycloak queda en los logs del servidor).
+La aprobacion crea el usuario en Auth0 y persiste tenant/usuario/`ExternalIdentity` en Talyer. Si falla la persistencia, se elimina el usuario en Auth0 y la solicitud sigue en `PendingReview`. El interesado entra luego con Magic Link y `POST /session`.
 
 ### Endpoints
 
@@ -204,15 +206,21 @@ Publicos (sin JWT):
 - `POST /membership-requests` (envia mail HTML con el link de confirmacion; si SMTP falla responde **500** `MembershipRequest.EmailDeliveryFailed` y la solicitud queda `PendingEmailVerification`)
 - `GET /membership-requests/confirm-email?token=...` (un clic; respuesta HTML). Confirma y envia el mail de exito en la misma transaccion. Si el mail de exito falla: rollback (`PendingEmailVerification`), **500** HTML, detalle en logs; el mismo link se puede reintentar.
 
-Autenticados (OAuth en Scalar, usuario `platform_owner`):
+Sesion:
+
+- `POST /session` (Bearer Auth0: `sub` + `email`). Devuelve JWT Talyer y el perfil de DB. Si no hay `User` con ese email responde **403**. No crea usuarios.
+
+Autenticados (JWT Talyer, usuario `platform_owner`):
 
 - `GET /membership-requests?status=PendingReview`
 - `POST /membership-requests/{id}/approve`
 - `POST /membership-requests/{id}/reject`
 
+En Scalar: OAuth2 (Auth0) para `/session`, luego pegar el access token Talyer (`TalyerJwt`) para el resto.
+
 Probar en http://localhost:5066/talyer-app-api
 
-Si falla el envio de invitacion en Keycloak o el save en Talyer despues de un envio exitoso, la API intenta **borrar** el usuario creado en Keycloak y no deja la solicitud en `Approved`.
+Si falla el save en Talyer tras crear el usuario en Auth0, la API intenta **borrar** ese usuario en Auth0 y no deja la solicitud en `Approved`.
 
 Un email = un usuario Talyer en este MVP (`Users.Email` unique). Nombre de empresa duplicado (`Tenant.Description`) rechaza la solicitud.
 

@@ -4,6 +4,7 @@ using TalyerApp.Application.Common.Interfaces.Notifications;
 using TalyerApp.Application.Dto;
 using TalyerApp.Application.Features.ExternalIdentities;
 using TalyerApp.Application.Features.MembershipRequests;
+using TalyerApp.Application.Features.Sessions;
 using TalyerApp.Application.Features.UserRoleAssignments;
 using TalyerApp.Application.Interfaces;
 
@@ -21,6 +22,7 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<ICommandDispatcher, CommandDispatcher>();
         services.AddScoped<IQueryDispatcher, QueryDispatcher>();
 
+        services.AddScoped<ICommandHandler<EstablishSessionCmd, SessionDto>, EstablishSessionCmdHdlr>();
         services.AddScoped<ICommandHandler<RegisterExternalIdentityCmd, Guid>, RegisterExternalIdentityCmdHdlr>();
         services.AddScoped<ICommandHandler<AssignUserRoleCmd, int>, AssignUserRoleCmdHdlr>();
         services.AddScoped<ICommandHandler<SubmitMembershipRequestCmd, int>, SubmitMembershipRequestCmdHdlr>();

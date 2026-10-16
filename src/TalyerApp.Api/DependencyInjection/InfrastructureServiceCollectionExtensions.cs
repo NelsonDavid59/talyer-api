@@ -33,11 +33,11 @@ public static class InfrastructureServiceCollectionExtensions
 
         services.AddSingleton<IEmailTemplateRenderer, FileEmailTemplateRenderer>();
         services.AddScoped<IEmailSender, SmtpEmailSender>();
-        services.AddHttpClient<IIdentityAdminService, KeycloakIdentityAdminService>((sp, client) =>
+        services.AddHttpClient<IIdentityAdminService, Auth0IdentityAdminService>((sp, client) =>
         {
-            var adminOptions = sp.GetRequiredService<IOptions<KeycloakAdminOptions>>().Value;
-            var sharedOptions = sp.GetRequiredService<IOptions<KeycloakSharedOptions>>().Value;
-            var baseUrl = KeycloakConnectionResolver.GetNormalizedBaseUrl(
+            var adminOptions = sp.GetRequiredService<IOptions<Auth0AdminOptions>>().Value;
+            var sharedOptions = sp.GetRequiredService<IOptions<Auth0SharedOptions>>().Value;
+            var baseUrl = Auth0ConnectionResolver.GetNormalizedBaseUrl(
                 adminOptions.BaseUrl,
                 sharedOptions.BaseUrl);
             client.BaseAddress = new Uri(baseUrl + "/");

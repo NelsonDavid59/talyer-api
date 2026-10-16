@@ -2,32 +2,32 @@ using Microsoft.Extensions.Options;
 
 namespace TalyerApp.Api.Configuration;
 
-public sealed class KeycloakApiOptionsValidator : IValidateOptions<KeycloakApiOptions>
+public sealed class Auth0ApiOptionsValidator : IValidateOptions<Auth0ApiOptions>
 {
-    private readonly KeycloakSharedOptions _shared;
+    private readonly Auth0SharedOptions _shared;
 
-    public KeycloakApiOptionsValidator(IOptions<KeycloakSharedOptions> shared)
+    public Auth0ApiOptionsValidator(IOptions<Auth0SharedOptions> shared)
     {
         _shared = shared.Value;
     }
 
-    public ValidateOptionsResult Validate(string? name, KeycloakApiOptions options)
+    public ValidateOptionsResult Validate(string? name, Auth0ApiOptions options)
     {
         var failures = new List<string>();
 
         if (string.IsNullOrWhiteSpace(options.Audience))
         {
-            failures.Add($"{KeycloakApiOptions.SectionName}:Audience is required.");
+            failures.Add($"{Auth0ApiOptions.SectionName}:Audience is required.");
         }
 
         if (options.RequireHttpsMetadata is null)
         {
-            failures.Add($"{KeycloakApiOptions.SectionName}:RequireHttpsMetadata must be set explicitly (true or false).");
+            failures.Add($"{Auth0ApiOptions.SectionName}:RequireHttpsMetadata must be set explicitly (true or false).");
         }
 
         var hasAuthority = !string.IsNullOrWhiteSpace(options.Authority);
-        var effectiveBaseUrl = KeycloakConnectionResolver.ResolveBaseUrl(options.BaseUrl, _shared.BaseUrl);
-        var effectiveRealm = KeycloakConnectionResolver.ResolveRealm(options.Realm, _shared.Realm);
+        var effectiveBaseUrl = Auth0ConnectionResolver.ResolveBaseUrl(options.BaseUrl, _shared.BaseUrl);
+        var effectiveRealm = Auth0ConnectionResolver.ResolveRealm(options.Realm, _shared.Realm);
         var hasBaseUrlAndRealm =
             !string.IsNullOrWhiteSpace(effectiveBaseUrl) &&
             !string.IsNullOrWhiteSpace(effectiveRealm);
@@ -35,7 +35,7 @@ public sealed class KeycloakApiOptionsValidator : IValidateOptions<KeycloakApiOp
         if (!hasAuthority && !hasBaseUrlAndRealm)
         {
             failures.Add(
-                $"{KeycloakApiOptions.SectionName}: set Authority, or configure Keycloak:BaseUrl and Keycloak:Realm, or Keycloak:Api:BaseUrl and Keycloak:Api:Realm.");
+                $"{Auth0ApiOptions.SectionName}: set Authority, or configure Auth0:BaseUrl and Auth0:Realm, or Auth0:Api:BaseUrl and Auth0:Api:Realm.");
         }
 
         if (!hasAuthority)
@@ -43,13 +43,13 @@ public sealed class KeycloakApiOptionsValidator : IValidateOptions<KeycloakApiOp
             if (!string.IsNullOrWhiteSpace(options.BaseUrl) && string.IsNullOrWhiteSpace(options.Realm) &&
                 string.IsNullOrWhiteSpace(_shared.Realm))
             {
-                failures.Add($"{KeycloakApiOptions.SectionName}:Realm is required when Api BaseUrl is set without Keycloak:Realm.");
+                failures.Add($"{Auth0ApiOptions.SectionName}:Realm is required when Api BaseUrl is set without Auth0:Realm.");
             }
 
             if (string.IsNullOrWhiteSpace(options.BaseUrl) && !string.IsNullOrWhiteSpace(options.Realm) &&
                 string.IsNullOrWhiteSpace(_shared.BaseUrl))
             {
-                failures.Add($"{KeycloakApiOptions.SectionName}:BaseUrl is required when Api Realm is set without Keycloak:BaseUrl.");
+                failures.Add($"{Auth0ApiOptions.SectionName}:BaseUrl is required when Api Realm is set without Auth0:BaseUrl.");
             }
         }
 
@@ -57,7 +57,7 @@ public sealed class KeycloakApiOptionsValidator : IValidateOptions<KeycloakApiOp
         {
             if (failures.Count == 0)
             {
-                KeycloakUrlBuilder.GetAuthority(options, _shared);
+                Auth0UrlBuilder.GetAuthority(options, _shared);
             }
         }
         catch (InvalidOperationException ex)

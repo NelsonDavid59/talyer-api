@@ -26,6 +26,7 @@
   "Tenant.AlreadyExists": "A tenant with this name already exists.",
   "Tenant.CodeGenerationFailed": "Could not generate a unique tenant code.",
   "Authorization.Forbidden": "You are not allowed to perform this action.",
+  "Session.UserNotRegistered": "No Talyer user is registered for this identity. Complete membership approval or platform owner bootstrap first.",
   "MembershipRequest.NotFound": "Membership request not found.",
   "MembershipRequest.InvalidCompanyName": "Company name is invalid.",
   "MembershipRequest.InvalidEmail": "Email is invalid.",

@@ -129,6 +129,12 @@ public static class DomainErrors
             Error.System(ErrorCodes.MembershipRequest.ConfirmationEmailFailed);
     }
 
+    public static class Session
+    {
+        public static readonly Error UserNotRegistered =
+            Error.Forbidden(ErrorCodes.Session.UserNotRegistered);
+    }
+
     public static class IdentityAdmin
     {
         public static readonly Error UserAlreadyExists =

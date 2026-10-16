@@ -1,8 +1,8 @@
 namespace TalyerApp.Infrastructure.Identity;
 
-public class KeycloakAdminOptions
+public class Auth0AdminOptions
 {
-    public const string SectionName = "Keycloak:Admin";
+    public const string SectionName = "Auth0:Admin";
 
     public string? BaseUrl { get; set; }
 

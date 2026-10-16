@@ -45,6 +45,7 @@ public class UserRoleAssignmentRep : IUserRoleAssignmentRep
         return await _context.UserRoleAssignments
             .AsNoTracking()
             .Include(a => a.Role)
+            .Include(a => a.Tenant)
             .Where(a => a.UserId == userId)
             .ToListAsync(cancellationToken);
     }

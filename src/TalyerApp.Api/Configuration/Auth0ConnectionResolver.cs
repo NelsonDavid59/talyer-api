@@ -1,6 +1,6 @@
 namespace TalyerApp.Api.Configuration;
 
-public static class KeycloakConnectionResolver
+public static class Auth0ConnectionResolver
 {
     public static string? ResolveBaseUrl(string? sectionBaseUrl, string? sharedBaseUrl) =>
         string.IsNullOrWhiteSpace(sectionBaseUrl) ? sharedBaseUrl : sectionBaseUrl;
@@ -14,7 +14,7 @@ public static class KeycloakConnectionResolver
         if (string.IsNullOrWhiteSpace(baseUrl))
         {
             throw new InvalidOperationException(
-                "Keycloak BaseUrl is not configured. Set Keycloak:BaseUrl or a section-specific BaseUrl.");
+                "Auth0 BaseUrl is not configured. Set Auth0:BaseUrl or a section-specific BaseUrl.");
         }
 
         return baseUrl.TrimEnd('/');

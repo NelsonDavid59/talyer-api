@@ -94,10 +94,7 @@ public class ApproveMembershipRequestCmdHdlr : ICommandHandler<ApproveMembership
         }
 
         var createUserResult = await _identityAdminService.CreateUserAsync(
-            request.Email,
-            request.Email,
-            request.FirstName,
-            request.LastName,
+            new CreateIdentityUserRequest(request.Email, request.Email),
             cancellationToken);
 
         if (createUserResult.IsFailure)
@@ -112,22 +109,7 @@ public class ApproveMembershipRequestCmdHdlr : ICommandHandler<ApproveMembership
             return Result<int>.Failure(createUserResult.Error);
         }
 
-        var providerUserId = createUserResult.Value;
-
-        var emailResult = await _identityAdminService.SendExecuteActionsEmailAsync(
-            providerUserId,
-            ["UPDATE_PASSWORD"],
-            cancellationToken);
-
-        if (emailResult.IsFailure)
-        {
-            await CompensateKeycloakUserAsync(providerUserId, cancellationToken);
-            _logger.LogError(
-                "Membership request {MembershipRequestId} approval rolled back: Keycloak invitation email failed for {ProviderUserId}. Request remains PendingReview.",
-                request.Id,
-                providerUserId);
-            return Result<int>.Failure(DomainErrors.MembershipRequest.ApprovalSystemError);
-        }
+        var createdIdentity = createUserResult.Value;
 
         var persisted = false;
         Result<int>? persistFailure = null;
@@ -143,7 +125,10 @@ public class ApproveMembershipRequestCmdHdlr : ICommandHandler<ApproveMembership
                     throw new InvalidOperationException(userResult.Error.Code);
                 }
 
-                var identityResult = ExternalIdentity.Create(userResult.Value.Id, "keycloak", providerUserId);
+                var identityResult = ExternalIdentity.Create(
+                    userResult.Value.Id,
+                    createdIdentity.Provider,
+                    createdIdentity.ProviderUserId);
                 if (identityResult.IsFailure)
                 {
                     persistFailure = Result<int>.Failure(identityResult.Error);
@@ -195,25 +180,25 @@ public class ApproveMembershipRequestCmdHdlr : ICommandHandler<ApproveMembership
         {
             _logger.LogError(
                 ex,
-                "Failed to persist membership approval for {Email}. Compensating Keycloak user {ProviderUserId}.",
+                "Failed to persist membership approval for {Email}. Compensating identity provider user {ProviderUserId}.",
                 request.Email,
-                providerUserId);
+                createdIdentity.ProviderUserId);
 
-            await CompensateKeycloakUserAsync(providerUserId, cancellationToken);
+            await CompensateIdentityUserAsync(createdIdentity.ProviderUserId, cancellationToken);
 
             return persistFailure ?? Result<int>.Failure(DomainErrors.MembershipRequest.ApprovalSystemError);
         }
 
         if (!persisted)
         {
-            await CompensateKeycloakUserAsync(providerUserId, cancellationToken);
+            await CompensateIdentityUserAsync(createdIdentity.ProviderUserId, cancellationToken);
             return Result<int>.Failure(DomainErrors.MembershipRequest.ApprovalSystemError);
         }
 
         return Result<int>.Success(request.Id);
     }
 
-    private Task CompensateKeycloakUserAsync(string providerUserId, CancellationToken cancellationToken) =>
+    private Task CompensateIdentityUserAsync(string providerUserId, CancellationToken cancellationToken) =>
         _identityAdminService.DeleteUserAsync(providerUserId, cancellationToken);
 
     private async Task<Result<string>> AllocateTenantCodeAsync(
